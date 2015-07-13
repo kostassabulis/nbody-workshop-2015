@@ -32,7 +32,7 @@ while t < t_f:
         for k in range(N_bodies):
             if i == k:
                 continue
-            r_ik3 = np.power(np.power(XS[k]-XS[i], 2) + np.power(YS[k]-YS[i], 2) + np.power(ZS[k]-ZS[i], 2), 1.5)
+            r_ik3 = np.power((XS[k]-XS[i])**2 + (YS[k]-YS[i])**2 + (ZS[k]-ZS[i])**2), 1.5)
             g_x += G*MS[k]*(XS[k]-XS[i])/r_ik3
             g_y += G*MS[k]*(YS[k]-YS[i])/r_ik3
             g_z += G*MS[k]*(ZS[k]-ZS[i])/r_ik3
