@@ -12,124 +12,137 @@ import matplotlib.animation as animation
 import matplotlib.cm as cm
 import matplotlib.collections as mcollections
 
+
 class BodyRenderer(object):
-    def __init__(self, bodies, line_style="", marker_style=".", color=lambda x: "b", history_length=1, fade=False, only_head=True, fps=15):
+    def __init__(self, bodies, line_style="", marker_style=".", color=lambda x: "b", 
+                 history_length=1, fade=False, only_head=True, fps=15):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
-            
-        self.bodies = bodies
-        self.line_style = line_style
-        self.marker_style = marker_style
-        self.drawing_style = self.marker_style + self.line_style
-        self.color = color
-        self.history_length = history_length
-        self.fade = fade
-        self.only_head = only_head
 
-        self.fig = plt.figure()
-        self.ax = axes3d.Axes3D(self.fig)
+        self._bodies = bodies
+        self._line_style = line_style
+        self._marker_style = marker_style
+        self._drawing_style = self._marker_style + self._line_style
+        self._color = color
+        self._history_length = history_length
+        self._fade = fade
+        self._only_head = only_head
+        self._fps = fps
+
+        self._fig = plt.figure()
+        self._ax = axes3d.Axes3D(self._fig)
         
-        self.body_count = bodies.shape[1]
-        self.lines = []
+        self._body_count = bodies.shape[1]
+        self._lines = []
 
         self._setup_plot()
-        self.ani = animation.FuncAnimation(self.fig, self._update, interval=int(1000.0/fps), blit=False)
+        self._ani = animation.FuncAnimation(self._fig, self._update, 
+                                            interval=int(1000.0/fps), blit=False)
 
-    def run(self):
-        plt.show()
+    def run(self, out_file=None):
+        if out_file:
+            Writer = animation.writers['ffmpeg']
+            writer = Writer(fps=self._fps, metadata=dict(artist='Me'), bitrate=1800)
+            self._ani.save(out_file, writer=writer)
+        else:
+            plt.show()
 
     def _setup_plot(self):
-        x_min_max = [np.min(self.bodies[:, :, 0]), np.max(self.bodies[:, :, 0])]
-        y_min_max = [np.min(self.bodies[:, :, 1]), np.max(self.bodies[:, :, 1])]
-        z_min_max = [np.min(self.bodies[:, :, 2]), np.max(self.bodies[:, :, 2])]
+        x_min_max = [np.min(self._bodies[:, :, 0]), np.max(self._bodies[:, :, 0])]
+        y_min_max = [np.min(self._bodies[:, :, 1]), np.max(self._bodies[:, :, 1])]
+        z_min_max = [np.min(self._bodies[:, :, 2]), np.max(self._bodies[:, :, 2])]
 
         for min_max in [x_min_max, y_min_max, z_min_max]:
             if min_max[0] == min_max[1]:
                 min_max[0] = -0.5
                 min_max[1] = 0.5
 
-        self.ax.set_xlim3d(x_min_max)
-        self.ax.set_xlabel('x')
+        self._ax.set_xlim3d(x_min_max)
+        self._ax.set_xlabel('x')
 
-        self.ax.set_ylim3d(y_min_max)
-        self.ax.set_ylabel('y')
+        self._ax.set_ylim3d(y_min_max)
+        self._ax.set_ylabel('y')
 
-        self.ax.set_zlim3d(z_min_max)
-        self.ax.set_zlabel('z')
+        self._ax.set_zlim3d(z_min_max)
+        self._ax.set_zlabel('z')
 
-        color_palette = [self.color(i / float(self.body_count)) for i in range(self.body_count)]
-        self.c = color_palette
+        color_palette = [self._color(i / float(self._body_count)) for i in range(self._body_count)]
+        self._c = color_palette
         mark_every = [-1]
-        if not self.only_head:
+        if not self._only_head:
             mark_every = None
 
-        if self.fade:
+        if self._fade:
             """If trajectories are supposed to fade we need a line object for each time step
                since you can only set a different alpha for one line segment.
             """
-            for t in range(self.history_length):
-                self.lines.extend([self.ax.plot([], [], [], self.drawing_style, color=color_palette[i], markevery=mark_every)[0] for i in range(self.body_count)])
+            for t in range(self._history_length):
+                self._lines.extend([self._ax.plot([], [], [], self._drawing_style, 
+                                    color=color_palette[i], 
+                                    markevery=mark_every)[0] for i in range(self._body_count)])
 
-            if self.only_head:
-                for i in range(self.body_count):
-                    for t in range(self.history_length - 1):
-                        self.lines[t * self.body_count + i].set_marker("")
+            if self._only_head:
+                for i in range(self._body_count):
+                    for t in range(self._history_length - 1):
+                        self._lines[t * self._body_count + i].set_marker("")
 
-                    self.lines[(self.history_length - 1) * self.body_count + i].set_marker(self.marker_style)
+                    self._lines[(self._history_length - 1) * self._body_count + i].set_marker(self._marker_style)
 
-        elif self.history_length > 1 or self.history_length <= 0:
+        elif self._history_length > 1 or self._history_length <= 0:
             """If we don't need fading trajectories one line object for each body is enough"""
-            self.lines.extend([self.ax.plot([], [], [], self.drawing_style, color=color_palette[i], markevery=mark_every)[0] for i in range(self.body_count)])
+            self._lines.extend([self._ax.plot([], [], [], self._drawing_style, 
+                                color=color_palette[i], markevery=mark_every)[0] for i in range(self._body_count)])
         else:
             """If we're only observing bodies at one time step at a time, we can do everything
                with just one line object.
             """
-            self.lines = self.ax.plot([], [], [], self.marker_style, color=color_palette[0])[0]
+            self._lines = self._ax.plot([], [], [], self._marker_style, color=color_palette[0])[0]
 
-        #return self.lines
+        #return self._lines
 
     def _get_color(self):
-        if isinstance(self.color, str):
-            return self.color
+        if isinstance(self._color, str):
+            return self._color
         else:
-            return self.color(random.random())
+            return self._color(random.random())
             
     def _update(self, num):
-        if self.fade:
+        if self._fade:
             if num > 1:
-                data_start = max(0, num - self.history_length)
-                cur_hist_len = min(self.history_length, num)
-                cur_hist_start = self.history_length - cur_hist_len + 2
-                for line_t_pos, t in zip(range(cur_hist_start, self.history_length), range(data_start + 2, num)):
-                    for i in range(self.body_count):
-                        line = self.lines[line_t_pos * self.body_count + i]
-                        line.set_data(self.bodies[t - 2 : t, i, 0], self.bodies[t - 2 : t, i, 1])
-                        line.set_3d_properties(self.bodies[t - 2 : t, i, 2])
+                data_start = max(0, num - self._history_length)
+                cur_hist_len = min(self._history_length, num)
+                cur_hist_start = self._history_length - cur_hist_len + 2
+                for line_t_pos, t in zip(range(cur_hist_start, self._history_length), 
+                                         range(data_start + 2, num)):
+                    for i in range(self._body_count):
+                        line = self._lines[line_t_pos * self._body_count + i]
+                        line.set_data(self._bodies[t - 2 : t, i, 0], self._bodies[t - 2 : t, i, 1])
+                        line.set_3d_properties(self._bodies[t - 2 : t, i, 2])
 
                         if cur_hist_len > 1:
                             line.set_alpha((line_t_pos - cur_hist_start) / float(cur_hist_len))
                         else:
                             line.set_alpha(1.0)
             else:
-                for i in range(self.body_count):
-                    line = self.lines[(self.history_length - 1) * self.body_count + i]
-                    line.set_data([self.bodies[num, i, 0]], [self.bodies[num, i, 1]])
-                    line.set_3d_properties([self.bodies[num, i, 2]])
+                for i in range(self._body_count):
+                    line = self._lines[(self._history_length - 1) * self._body_count + i]
+                    line.set_data([self._bodies[num, i, 0]], [self._bodies[num, i, 1]])
+                    line.set_3d_properties([self._bodies[num, i, 2]])
                     line.set_alpha(1.0)
-        elif self.history_length > 1 or self.history_length <= 0:
+        elif self._history_length > 1 or self._history_length <= 0:
             history_slice = slice(None, num)
-            if self.history_length > 1:
-                history_slice = slice(max(0, num - self.history_length), num)
-            for i, line in enumerate(self.lines):
-                line.set_data(self.bodies[history_slice, i, 0], self.bodies[history_slice, i, 1])
-                line.set_3d_properties(self.bodies[history_slice, i, 2])
+            if self._history_length > 1:
+                history_slice = slice(max(0, num - self._history_length), num)
+            for i, line in enumerate(self._lines):
+                line.set_data(self._bodies[history_slice, i, 0], self._bodies[history_slice, i, 1])
+                line.set_3d_properties(self._bodies[history_slice, i, 2])
                 line.set_alpha(1.0)
         else:
-            self.lines.set_data(self.bodies[num, :, 0], self.bodies[num, :, 1])
-            self.lines.set_3d_properties(self.bodies[num, :, 2])
-            self.lines.set_alpha(1.0)
+            self._lines.set_data(self._bodies[num, :, 0], self._bodies[num, :, 1])
+            self._lines.set_3d_properties(self._bodies[num, :, 2])
+            self._lines.set_alpha(1.0)
                 
-        return self.lines
+        return self._lines
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Render nbody simulation results.")
@@ -149,7 +162,9 @@ if __name__ == "__main__":
     if args.color:
         color = args.color
 
-    body_renderer = BodyRenderer(bodies, line_style="-", marker_style=".", history_length=args.timesteps, fade=args.fade, color=color, fps=args.speed)
-    body_renderer.run()
+    body_renderer = BodyRenderer(bodies, line_style="-", marker_style=".", 
+                                 history_length=args.timesteps, fade=args.fade, 
+                                 color=color, fps=args.speed)
+    body_renderer.run(out_file=args.out)
     
     sys.exit(0)
