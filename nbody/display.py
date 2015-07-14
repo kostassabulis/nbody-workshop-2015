@@ -1,30 +1,16 @@
+"""Simulation display functionality
 """
-A simple example of an animated plot... In 3D!
-"""
-import numpy as np
-import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d.axes3d as axes3d
-import matplotlib.animation as animation
-import random
-import colorsys
-import matplotlib.cm as cm
-import matplotlib.collections as mcollections
 
-def load_bodies(directory_name, unpack=True):
-    base_name = "n_body_py.csv."
-    data = [[] for x in range(999)]
-    for i in range(999):
-        file_name = directory_name + base_name + str(i)
-        bodies = np.loadtxt(file_name, delimiter=",", skiprows=1, unpack=unpack)
-        x, y, z = bodies
-
-        data[i] = bodies
-
-def repack_bodies(bodies):
-    return np.transpose(bodies, (0, 2, 1))
-
+import util
 import sys
 import argparse
+
+import numpy as np
+import mpl_toolkits.mplot3d.axes3d as axes3d
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import matplotlib.cm as cm
+import matplotlib.collections as mcollections
 
 class BodyRenderer(object):
     def __init__(self, bodies, line_style="", marker_style=".", color=lambda x: "b", history_length=1, fade=False, only_head=True, fps=15):
@@ -43,7 +29,7 @@ class BodyRenderer(object):
         self.fig = plt.figure()
         self.ax = axes3d.Axes3D(self.fig)
         
-        self.body_count = data.shape[1]
+        self.body_count = bodies.shape[1]
         self.lines = []
 
         self._setup_plot()
@@ -87,10 +73,8 @@ class BodyRenderer(object):
             if self.only_head:
                 for i in range(self.body_count):
                     for t in range(self.history_length - 1):
-                        #self.lines[t * self.body_count + i].set_markevery(None)
                         self.lines[t * self.body_count + i].set_marker("")
 
-                    #elf.lines[(self.history_length - 1) * self.body_count + i].set_markevery(mark_every)
                     self.lines[(self.history_length - 1) * self.body_count + i].set_marker(self.marker_style)
 
         elif self.history_length > 1 or self.history_length <= 0:
@@ -100,7 +84,7 @@ class BodyRenderer(object):
             """If we're only observing bodies at one time step at a time, we can do everything
                with just one line object.
             """
-            self.lines = self.ax.plot([], [], [], self.drawing_style, color=color_palette[0], markevery=mark_every)[0]
+            self.lines = self.ax.plot([], [], [], self.marker_style, color=color_palette[0])[0]
 
         #return self.lines
 
@@ -152,26 +136,20 @@ if __name__ == "__main__":
     parser.add_argument("directory", help="directory with all of the simulation files in a .csv format")
     parser.add_argument("-c", "--color", type=str, help="specifies in what color to draw the bodies. If not set all bodies are drawn in different colors", choices=['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w'])
     parser.add_argument("-s", "--speed", metavar="fps", type=int, default=30)
-    parser.add_argument("-a", "--all", action="store_true", help="includes bodies from all previous time steps, instead of drawing only the current one")
-    parser.add_argument("-f", "--fade", metavar="num", type=int, default=0, help="fades out bodies gradually up to the amount specified. Older bodies do not get drawn at all")
+    parser.add_argument("-t", "--timesteps", metavar="num", type=int, default=1, help="displays previous body states up to the amount specified. Set to 0 to display all states")
+    parser.add_argument("-f", "--fade", action="store_true", help="specifies whether bodies from previous time steps should fade")
+    parser.add_argument("-o", "--out", metavar="path", type=str, help="if specified will output video to file")
     parser.add_argument("-v", "--verbose", action="store_true", help="prints the current frame number to the terminal while drawing")
     
     args = parser.parse_args()
-    directory_name = "snapshot/"
-    base_name = "n_body_py.csv."
-    data = [[] for x in range(999)]
-    for i in range(999):
-        file_name = directory_name + base_name + str(i)
-        bodies = np.loadtxt(file_name, delimiter=",", skiprows=1, unpack=False)
-        #x, y, z = bodies
+    
+    bodies = util.load_bodies("snapshot/")
 
-        data[i] = bodies
+    color = cm.get_cmap()
+    if args.color:
+        color = args.color
 
-    data = np.array(data)
-    body_renderer = BodyRenderer(data, line_style="-", marker_style=".", history_length=200, fade=True, color=cm.get_cmap())
+    body_renderer = BodyRenderer(bodies, line_style="-", marker_style=".", history_length=args.timesteps, fade=args.fade, color=color, fps=args.speed)
     body_renderer.run()
-    #data = np.array(data)
-    #data = np.transpose(data, (2, 1, 0))
-
     
     sys.exit(0)
