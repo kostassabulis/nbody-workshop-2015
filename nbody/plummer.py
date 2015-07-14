@@ -1,9 +1,9 @@
 __author__ = 'Tomas'
 
 ## plummer(N, r_pl)  N - number of stars; r_pl - cluster scale radius
-## plummer() grazina x,y,z koordinates ir zvaigzdiu mases(isvardyta tvarka)
+## plummer(N, r_pl) grazina x,y,z koordinates ir zvaigzdiu mases(isvardyta tvarka)
 ## zvaigzdziu mases grazinamos saules masemis
-## koordinates r_pl vienetais
+## koordinates grazinamos r_pl vienetais
 
 import numpy as np
 
