@@ -21,7 +21,7 @@ VS_z = [0, 0, 0, 0]
 n = 0
 t = 0
 t_f = 10 * yr
-dt = 0.001 * yr
+dt = 0.0001 * yr
 dt_output = 0.01 * yr
 
 while t < t_f:
@@ -43,7 +43,7 @@ while t < t_f:
         VS_y[i] += g_y*dt
         VS_z[i] += g_z*dt
     if n*dt_output <= t:
-        f = open("../snapshot/n_body_py.csv."+str(n), 'w')
+        f = open("snapshot/n_body_py.csv."+str(n), 'w')
         f.write("x,y,z\n")
         for i in range(N_bodies):
             f.write("%e,%e,%e\n" % (XS[i], YS[i], ZS[i]))
