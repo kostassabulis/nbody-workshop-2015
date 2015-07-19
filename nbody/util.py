@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 
-def load_bodies(directory_name, stack_coords=False):
+def load_snapshots(directory_name, stack_coords=False):
     """Loads files by traversing a directory and reading in a filename sorted order"""
     data = []
     for root, dirs, files in os.walk(directory_name):

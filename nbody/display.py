@@ -3,6 +3,7 @@
 
 import util
 import sys
+import time
 import argparse
 
 import numpy as np
@@ -13,9 +14,9 @@ import matplotlib.cm as cm
 import matplotlib.collections as mcollections
 
 
-class BodyRenderer(object):
+class SnapshotRenderer(object):
     def __init__(self, bodies, line_style="", marker_style=".", color=lambda x: "b", 
-                 history_length=1, fade=False, only_head=True, fps=15):
+                 history_length=1, fade=False, only_head=True, fps=15, verbose=0):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
 
@@ -28,6 +29,7 @@ class BodyRenderer(object):
         self._fade = fade
         self._only_head = only_head
         self._fps = fps
+        self._verbose = verbose
 
         self._fig = plt.figure()
         self._ax = axes3d.Axes3D(self._fig)
@@ -36,7 +38,7 @@ class BodyRenderer(object):
         self._lines = []
 
         self._setup_plot()
-        self._ani = animation.FuncAnimation(self._fig, self._update, 
+        self._ani = animation.FuncAnimation(self._fig, self._update, self._bodies.shape[0],
                                             interval=int(1000.0/fps), blit=False)
 
     def run(self, out_file=None):
@@ -107,6 +109,15 @@ class BodyRenderer(object):
             return self._color(random.random())
             
     def _update(self, num):
+        if self._verbose:
+            if self._verbose == 1:
+                sys.stdout.write(".")
+                sys.stdout.flush()
+                if num == self._bodies.shape[0] - 1:
+                    print ""
+            elif self._verbose == 2:
+                print "{}/{}".format(num, self._bodies.shape[0])
+
         if self._fade:
             if num > 1:
                 data_start = max(0, num - self._history_length)
@@ -141,14 +152,14 @@ class BodyRenderer(object):
             self._lines.set_data(self._bodies[num, :, 0], self._bodies[num, :, 1])
             self._lines.set_3d_properties(self._bodies[num, :, 2])
             self._lines.set_alpha(1.0)
-                
+
         return self._lines
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Render nbody simulation results.")
     parser.add_argument("directory", help="directory with all of the simulation files in a .csv format")
     parser.add_argument("-c", "--color", type=str, help="specifies in what color to draw the bodies. If not set all bodies are drawn in different colors", choices=['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w'])
-    parser.add_argument("-s", "--speed", metavar="fps", type=int, default=30)
+    parser.add_argument("-s", "--speed", metavar="fps", type=int, default=20)
     parser.add_argument("-t", "--timesteps", metavar="num", type=int, default=1, help="displays previous body states up to the amount specified. Set to 0 to display all states")
     parser.add_argument("-f", "--fade", action="store_true", help="specifies whether bodies from previous time steps should fade")
     parser.add_argument("-o", "--out", metavar="path", type=str, help="if specified will output video to file")
@@ -156,15 +167,19 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    bodies = util.load_bodies("snapshot/")
+    bodies = util.load_snapshots("snapshot/")
 
     color = cm.get_cmap()
     if args.color:
         color = args.color
 
-    body_renderer = BodyRenderer(bodies, line_style="-", marker_style=".", 
-                                 history_length=args.timesteps, fade=args.fade, 
-                                 color=color, fps=args.speed)
+    verbose_level = 1
+    if args.verbose:
+        verbose_level = 2
+
+    body_renderer = SnapshotRenderer(bodies, line_style="-", marker_style=".", 
+                                     history_length=args.timesteps, fade=args.fade, 
+                                     color=color, fps=args.speed, verbose=verbose_level)
     body_renderer.run(out_file=args.out)
     
     sys.exit(0)
