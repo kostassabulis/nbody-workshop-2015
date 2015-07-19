@@ -1,3 +1,6 @@
 *.xml
+*.mp4
+*.pyc
+
 nbody/.idea/.name
 nbody/.idea/nbody.iml
