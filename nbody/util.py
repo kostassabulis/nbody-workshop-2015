@@ -15,3 +15,10 @@ def load_snapshots(directory_name, stack_coords=False):
                 data.append(bodies)
 
     return np.array(data)
+    
+def save_snapshot(snapshot, file_name):
+    f = open(file_name, 'w')
+    f.write("x,y,z\n")
+    for i in range(snapshot.shape[0]):
+        f.write("%e,%e,%e\n" % (snapshot[i, 0], snapshot[i, 1], snapshot[i, 2]))
+    f.close()
