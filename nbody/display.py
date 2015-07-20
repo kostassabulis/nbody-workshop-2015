@@ -15,12 +15,13 @@ import matplotlib.collections as mcollections
 
 
 class SnapshotRenderer(object):
-    def __init__(self, bodies, line_style="", marker_style=".", color=lambda x: "b", 
-                 history_length=1, fade=False, only_head=True, fps=15, verbose=0):
+    def __init__(self, bodies, blocking=False, line_style="", marker_style=".", color=lambda x: "b", 
+                 history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
 
         self._bodies = bodies
+        self._blocking = blocking
         self._line_style = line_style
         self._marker_style = marker_style
         self._drawing_style = self._marker_style + self._line_style
@@ -29,35 +30,69 @@ class SnapshotRenderer(object):
         self._fade = fade
         self._only_head = only_head
         self._fps = fps
+        self._bounds = bounds
         self._verbose = verbose
 
         self._fig = plt.figure()
         self._ax = axes3d.Axes3D(self._fig)
         
         self._body_count = bodies.shape[1]
+        self._time_steps = None
+        if not self._blocking:
+            self._time_steps = bodies.shape[0]
+        else:
+            plt.ion()
+            self._num = 0          
+
         self._lines = []
 
         self._setup_plot()
-        self._ani = animation.FuncAnimation(self._fig, self._update, self._bodies.shape[0],
-                                            interval=int(1000.0/fps), blit=False)
+        self._ani = None
+        if not self._blocking:
+            self._ani = animation.FuncAnimation(self._fig, self._update, self._time_steps,
+                                                interval=int(1000.0/fps), blit=False, repeat_delay=2000)
 
-    def run(self, out_file=None):
-        if out_file:
-            Writer = animation.writers['ffmpeg']
-            writer = Writer(fps=self._fps, metadata=dict(artist='Me'), bitrate=1800)
-            self._ani.save(out_file, writer=writer)
+    def run(self, out_file=None, updated_data=None):
+        if self._blocking and updated_data is None:
+            raise ValueError("If renderer is set to blocking mode you have to pass in updates for each frame")
+
+        if not self._blocking:
+            if out_file:
+                Writer = animation.writers['ffmpeg']
+                writer = Writer(fps=self._fps, metadata=dict(artist='Me'), bitrate=1800)
+                self._ani.save(out_file, writer=writer)
+            else:
+                plt.show()
         else:
-            plt.show()
+            if out_file:
+                raise NotImplementedError("Can't save to file in interactive mode")
+            else:
+                self._bodies = updated_data
+                self._update_lines(self._num)
+                self._ax.figure.canvas.draw()
+                self._fig.show()
+                plt.pause(0.001)
+
+            self._num += 1
 
     def _setup_plot(self):
-        x_min_max = [np.min(self._bodies[:, :, 0]), np.max(self._bodies[:, :, 0])]
-        y_min_max = [np.min(self._bodies[:, :, 1]), np.max(self._bodies[:, :, 1])]
-        z_min_max = [np.min(self._bodies[:, :, 2]), np.max(self._bodies[:, :, 2])]
+        x_min_max, y_min_max, z_min_max = None, None, None
 
-        for min_max in [x_min_max, y_min_max, z_min_max]:
-            if min_max[0] == min_max[1]:
-                min_max[0] = -0.5
-                min_max[1] = 0.5
+        if not self._bounds:
+            x_min_max = [np.min(self._bodies[:, :, 0]), np.max(self._bodies[:, :, 0])]
+            y_min_max = [np.min(self._bodies[:, :, 1]), np.max(self._bodies[:, :, 1])]
+            z_min_max = [np.min(self._bodies[:, :, 2]), np.max(self._bodies[:, :, 2])]
+            for min_max in [x_min_max, y_min_max, z_min_max]:
+                if min_max[0] == min_max[1]:
+                    min_max[0] = -0.5
+                    min_max[1] = 0.5
+        else:
+            if len(self._bounds) == 3:
+                x_min_max, y_min_max, z_min_max = self._bounds
+            elif len(self._bounds) == 2:
+                x_min_max, y_min_max, z_min_max = self._bounds, self._bounds, self._bounds
+            else:
+                raise ValueError("Bounds len should be either 2 (min and max) or 3 (min and max for each dim)")
 
         self._ax.set_xlim3d(x_min_max)
         self._ax.set_xlabel('x')
@@ -107,17 +142,8 @@ class SnapshotRenderer(object):
             return self._color
         else:
             return self._color(random.random())
-            
-    def _update(self, num):
-        if self._verbose:
-            if self._verbose == 1:
-                sys.stdout.write(".")
-                sys.stdout.flush()
-                if num == self._bodies.shape[0] - 1:
-                    print ""
-            elif self._verbose == 2:
-                print "{}/{}".format(num, self._bodies.shape[0])
 
+    def _update_lines(self, num):
         if self._fade:
             if num > 1:
                 data_start = max(0, num - self._history_length)
@@ -152,6 +178,18 @@ class SnapshotRenderer(object):
             self._lines.set_data(self._bodies[num, :, 0], self._bodies[num, :, 1])
             self._lines.set_3d_properties(self._bodies[num, :, 2])
             self._lines.set_alpha(1.0)
+
+    def _update(self, num):
+        if self._verbose:
+            if self._verbose == 1:
+                sys.stdout.write(".")
+                sys.stdout.flush()
+                if num == self._bodies.shape[0] - 1:
+                    print ""
+            elif self._verbose == 2:
+                print "{}/{}".format(num, self._bodies.shape[0])
+
+        self._update_lines(num)
 
         return self._lines
 

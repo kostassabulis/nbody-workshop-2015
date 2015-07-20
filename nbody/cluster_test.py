@@ -14,13 +14,17 @@ yr = 3.15569e7
 
 total_time = 10000 * yr
 dt = 10 * yr
-dt_output = 100 * yr
+dt_output = 50 * yr
 
 bodies = icc.plummer(100, 1.0e14)
 bodies.m *= M_solar
 
 body_history = np.zeros((total_time / dt_output + 1, bodies.r.shape[0], bodies.r.shape[1]))
 body_history[0, :, :] = bodies.r
+
+
+snapshot_renderer = display.SnapshotRenderer(body_history, blocking=True, line_style="", marker_style=".", 
+                                             history_length=0, fade=False, verbose=0)
 for i, current_t in enumerate(leapfrog.simulate_step(bodies, dt, G=6.67e-11, dt_output=dt_output)):
     if current_t >= total_time:
         break
@@ -28,7 +32,6 @@ for i, current_t in enumerate(leapfrog.simulate_step(bodies, dt, G=6.67e-11, dt_
     print "{}/{}".format(current_t, total_time)
     
     body_history[i + 1, :, :] = bodies.r
+    snapshot_renderer.run(updated_data=body_history[:i + 1, :, :])
 
-snapshot_renderer = display.SnapshotRenderer(body_history, line_style="", marker_style=".", 
-                                             history_length=0, fade=False, verbose=2)
-snapshot_renderer.run()
+
