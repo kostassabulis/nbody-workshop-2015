@@ -1,4 +1,8 @@
+'''
 __author__ = 'Tomas'
+
+
+'''
 
 ## plummer(N, r_pl)  N - number of stars; r_pl - cluster scale radius
 ## plummer(N, r_pl) grazina x,y,z koordinates ir zvaigzdiu mases(isvardyta tvarka)
@@ -8,7 +12,7 @@ __author__ = 'Tomas'
 import numpy as np
 
 def plummer(N, r_pl): 
-    M_min = 0.8 # min zvaigzdes mase
+    M_min = 0.08 # min zvaigzdes mase
     M_max = 100 # max zvaigzdes mase
     mStars = IMF(N, M_min, M_max)
     rStars = distance(N, r_pl)
