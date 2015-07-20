@@ -9,6 +9,8 @@ __author__ = 'Tomas'
 ## zvaigzdziu mases grazinamos saules masemis
 ## koordinates grazinamos r_pl vienetais
 
+from collections import namedtuple
+
 import numpy as np
 
 def plummer(N, r_pl): 
@@ -17,7 +19,13 @@ def plummer(N, r_pl):
     mStars = IMF(N, M_min, M_max)
     rStars = distance(N, r_pl)
     xStars, yStars, zStars = coordinates(N, rStars)
-    return xStars, yStars, zStars, mStars
+
+    bodies = namedtuple("Bodies", ["r", "v", "m"])
+    bodies.r = np.transpose(np.array([xStars, yStars, zStars]))
+    bodies.m = np.array(mStars)
+    bodies.v = np.zeros(bodies.r.shape)
+
+    return bodies
 
 def IMF(N, M_min, M_max):
     p = -2.35 +1 # Salpeter funkcijos koff. +1. nes suintegravus taip
