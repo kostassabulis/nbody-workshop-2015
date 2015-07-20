@@ -3,15 +3,13 @@ __author__ = 'Collaboration'
 import numpy as np
 import os.path
 
-G = 6.67e-11
-
-def calc_vel_update(positions, mass, dt):
+def calc_vel_update(positions, mass, G, dt):
     r_ik3 = np.power(np.sum((positions[0] - positions[1])**2), 1.5)
     updates = G * mass * (positions[1] - positions[0]) / r_ik3
-
+    
     return updates
     
-def simulate_step(bodies, dt, dt_output=None):
+def simulate_step(bodies, dt, G=1.0, dt_output=None):
     current_t = 0
     current_step = 0
     N_bodies = bodies.r.shape[0]
@@ -25,10 +23,12 @@ def simulate_step(bodies, dt, dt_output=None):
                 if i == k:
                     continue
                     
-                vel_update += calc_vel_update((bodies.r[i, :], bodies.r[k, :]), bodies.m[k], dt)
-                
-            bodies.r[i, :] += bodies.v[i, :] * dt
+                vel_update += calc_vel_update((bodies.r[i, :], bodies.r[k, :]), bodies.m[k], G, dt)
+            
             bodies.v[i, :] += vel_update * dt
+
+        for i in range(N_bodies):
+            bodies.r[i, :] += bodies.v[i, :] * dt
 
         if current_step * dt_output <= current_t:
             current_step += 1
