@@ -38,7 +38,7 @@ def uniform_distribution(N, R):
     bodies.v = np.zeros(bodies.r.shape)
     M = np.sum(mStars)
     ro = M/(4./3.*np.pi*R**3)
-    print "Expected collapse time :" + str(np.sqrt(3*np.pi/32./constants.G/ro))
+    print "Expected collapse time : %e" %np.sqrt(3*np.pi/32./constants.G/ro)
     return bodies
 
 def IMF_salpeter(N, M_min, M_max):

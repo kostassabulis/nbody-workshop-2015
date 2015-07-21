@@ -27,7 +27,8 @@ for i, current_t in enumerate(leapfrog.simulate_step(bodies, dt, G=constants.G, 
     if current_t >= total_time:
         break
 
-    print "{}/{}".format(current_t, total_time)
+    print "%e/%e" %(current_t, total_time)
+
     
     body_history[i + 1, :, :] = bodies.r
     snapshot_renderer.run(updated_data=body_history[:i + 1, :, :])
