@@ -16,7 +16,7 @@ import constants
 def plummer(N, r_pl): 
     M_min = 0.08 # min zvaigzdes mase
     M_max = 100 # max zvaigzdes mase
-    mStars = IMF(N, M_min, M_max)
+    mStars = IMF(N, M_min, M_max) * constants.SOLAR_MASS
     rStars = distance(N, r_pl)
     xStars, yStars, zStars = vector_projection(N, rStars)
     vStars = velocity(N, mStars, rStars)
