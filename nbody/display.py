@@ -5,6 +5,7 @@ import util
 import sys
 import time
 import argparse
+import pickle
 
 import numpy as np
 import mpl_toolkits.mplot3d.axes3d as axes3d
@@ -195,7 +196,7 @@ class SnapshotRenderer(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Render nbody simulation results.")
-    parser.add_argument("directory", help="directory with all of the simulation files in a .csv format")
+    parser.add_argument("directory", help="directory with all of the simulation files in a .csv format, or a pickled snapshot file")
     parser.add_argument("-c", "--color", type=str, help="specifies in what color to draw the bodies. If not set all bodies are drawn in different colors", choices=['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w'])
     parser.add_argument("-s", "--speed", metavar="fps", type=int, default=20)
     parser.add_argument("-t", "--timesteps", metavar="num", type=int, default=1, help="displays previous body states up to the amount specified. Set to 0 to display all states")
@@ -205,7 +206,11 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    bodies = util.load_snapshots("snapshot/")
+    bodies = None
+    if args.directory.endswith(".pkl"):
+        bodies = pickle.load(args.directory)
+    else:
+        bodies = util.load_snapshots(args.directory)
 
     color = cm.get_cmap()
     if args.color:
