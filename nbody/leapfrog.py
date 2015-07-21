@@ -1,17 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Mar 13 21:49:28 2015
-
-@author: eimantas
-"""
+"""Leapfrog integrator"""
 
 import numpy as np
-
-def calc_vel_update(positions, mass, G, dt):
-    r_ik3 = np.power(np.sum((positions[0] - positions[1])**2), 1.5)
-    updates = G * mass * dt * (positions[1] - positions[0]) / r_ik3
-
-    return updates
 
 def simulate_step(bodies, dt, G=1.0, dt_output=None):
     current_t = 0
@@ -21,21 +10,17 @@ def simulate_step(bodies, dt, G=1.0, dt_output=None):
         dt_output = dt
 
     for i in range(N_bodies):
-        for k in range(N_bodies):
-            if k == i:
-                continue
-            bodies.v[i, :] += 0.5 * calc_vel_update((bodies.r[i, :], bodies.r[k, :]), bodies.m[k], G, dt)
+        coord_diff = bodies.r - bodies.r[i, :]
+        r_ik3 = np.sum(coord_diff**2, axis=1)**1.5 + 1e-16
+        bodies.v[i, :] += 0.5 * dt * G * np.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
 
     while True:
-        for i in range(N_bodies):
-            bodies.r[i, :] += bodies.v[i, :] * dt
+        bodies.r += dt * bodies.v
         
         for i in range(N_bodies):        
-            for k in range(N_bodies):
-                if k == i:
-                    continue
-
-                bodies.v[i, :] += calc_vel_update((bodies.r[i, :], bodies.r[k, :]), bodies.m[k], G, dt)
+            coord_diff = bodies.r - bodies.r[i, :]
+            r_ik3 = np.sum(coord_diff**2, axis=1)**1.5 + 1e-16
+            bodies.v[i, :] += dt * G * np.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
 
         if current_step * dt_output <= current_t:
             current_step += 1
