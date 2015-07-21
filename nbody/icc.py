@@ -10,20 +10,21 @@ __author__ = 'Tomas'
 ## koordinates grazinamos r_pl vienetais
 
 from collections import namedtuple
-
 import numpy as np
+import constants
 
 def plummer(N, r_pl): 
     M_min = 0.08 # min zvaigzdes mase
     M_max = 100 # max zvaigzdes mase
     mStars = IMF(N, M_min, M_max)
     rStars = distance(N, r_pl)
-    xStars, yStars, zStars = coordinates(N, rStars)
-
+    xStars, yStars, zStars = vector_projection(N, rStars)
+    vStars = velocity(N, mStars, rStars)
+    v_xStars, v_yStars, v_zStars = vector_projection(N, vStars)
     bodies = namedtuple("Bodies", ["r", "v", "m"])
     bodies.r = np.transpose(np.array([xStars, yStars, zStars]))
     bodies.m = np.array(mStars)
-    bodies.v = np.zeros(bodies.r.shape)
+    bodies.v = np.transpose(np.array([v_xStars, v_yStars, v_zStars]))
 
     return bodies
 
@@ -38,10 +39,18 @@ def distance(N, r_pl):
     rStars = (np.random.sample(N)**(-2./3)-1)**(-0.5) * r_pl
     return rStars
 
-def coordinates(N, rStars):
-    zStars = 2*rStars*np.random.sample(N) - rStars
-    tetaStars = 2* np.pi * np.random.sample(N)
-    xStars = (rStars*rStars - zStars*zStars)**0.5 * np.cos(tetaStars)
-    yStars = (rStars*rStars - zStars*zStars)**0.5 * np.sin(tetaStars)
-    return xStars, yStars, zStars
+def vector_projection(N, vector):
+    zProjection = 2*vector*np.random.sample(N) - vector
+    teta = 2* np.pi * np.random.sample(N)
+    xProjection = (vector*vector - zProjection*zProjection)**0.5 * np.cos(teta)
+    yProjection = (vector*vector - zProjection*zProjection)**0.5 * np.sin(teta)
+    return xProjection, yProjection, zProjection
 
+def velocity(N, mStars, rStars):
+    vStars = np.zeros(N)
+    rStars_sorted = np.sort(rStars)
+    M = 0
+    for i,r in enumerate(rStars_sorted):
+        M += mStars[i]
+        vStars[i] = np.sqrt(constants.G * M / rStars_sorted[i])
+    return vStars
