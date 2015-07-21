@@ -14,7 +14,7 @@ dt = 10 * constants.YR
 dt_output = 50 * constants.YR
 
 bodies = icc.plummer(100, 1.0e14)
-bodies.m *= constants.SOLAR_MASS
+#bodies.m *= constants.SOLAR_MASS # tai jau daroma icc
 
 body_history = np.zeros((total_time / dt_output + 1, bodies.r.shape[0], bodies.r.shape[1]))
 body_history[0, :, :] = bodies.r
