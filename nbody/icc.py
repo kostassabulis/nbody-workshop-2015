@@ -49,7 +49,7 @@ def IMF_salpeter(N, M_min, M_max):
     return np.power(c, 1. / p)
 
 def distance_plummer(N, r_pl):
-    rStars = (np.random.sample(N)**(-2./3)-1)**(-0.5) * r_pl
+    rStars = r_pl / np.sqrt(np.random.sample(N)**(-2./3) - 1) #Aarseth et al. 1974
     return rStars
 
 def vector_projection(N, vector):
