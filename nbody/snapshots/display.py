@@ -76,6 +76,18 @@ class SnapshotRenderer(object):
 
             self._num += 1
 
+    @classmethod
+    def for_clusters(cls, snapshot_storage, **kwargs):
+        return cls(snapshot_storage, line_style="", marker_style=".", history_length=1, fade=False, **kwargs)
+
+    @classmethod
+    def for_orbits(cls, snapshot_storage, **kwargs):
+        return cls(line_style="-", marker_style=".", history_length=0, fade=False, color=cm.get_cmap(), **kwargs)
+
+    @classmethod
+    def for_cluster_trajectories(cls, snapshot_storage, **kwargs):
+        return cls(snapshot_storage, line_style="", marker_style=".", history_length=0, fade=False, **kwargs)
+
     def _setup_plot(self):
         x_min_max, y_min_max, z_min_max = None, None, None
 
