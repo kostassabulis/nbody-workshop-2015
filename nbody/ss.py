@@ -5,9 +5,8 @@ import matplotlib.cm as cm
 
 import euler
 import leapfrog
-import display
-
 import constants
+from snapshots.display import SnapshotRenderer
 
 bodies = namedtuple("Bodies", ["r", "v", "m"])
 bodies.r = np.array([
@@ -31,9 +30,9 @@ body_history = np.zeros((total_time / dt_output + 1, bodies.r.shape[0], bodies.r
 body_history[0, :, :] = bodies.r
 
 
-snapshot_renderer = display.SnapshotRenderer(body_history, blocking=True, line_style="-", marker_style=".", 
-                                             history_length=0, fade=False, color=cm.get_cmap(), verbose=0,
-                                             bounds=(-constants.AU, constants.AU))
+snapshot_renderer = SnapshotRenderer(body_history, blocking=True, line_style="-", marker_style=".", 
+                                     history_length=0, fade=False, color=cm.get_cmap(), verbose=0,
+                                     bounds=(-constants.AU, constants.AU))
 
 for i, current_t in enumerate(euler.simulate_step(bodies, dt, G=constants.G, dt_output=dt_output)):
     if current_t >= total_time:
