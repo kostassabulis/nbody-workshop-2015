@@ -33,11 +33,6 @@ class SnapshotRenderer(object):
         self._bounds = bounds
         self._verbose = verbose
 
-        self._fig = plt.figure()
-        self._ax = axes3d.Axes3D(self._fig)
-        
-        self._lines = []
-
         self._drawing_ready = False
         self._animation_ready = False
         if self._snapshot_storage and self._snapshot_storage.snapshot_count:
@@ -48,9 +43,14 @@ class SnapshotRenderer(object):
         if not self._snapshot_storage.snapshot_count:
             raise RuntimeError("The supplied SnapshotStorage is empty.")
 
+
+        if not self._drawing_ready:
+            self._setup_plot(self._snapshot_storage.snapshot_count, self._snapshot_storage.snapshot_shape[0])
+            self._drawing_ready = True
+
         if not self._animation_ready:
             self._ani = animation.FuncAnimation(self._fig, self._update, self._snapshot_storage.snapshot_count,
-                                                interval=int(1000.0/self._fps), blit=False, repeat_delay=2000)
+                                                interval=int(1000.0/self._fps), blit=False, repeat=False)
             self._animation_ready = True
 
         if out_file:
@@ -94,6 +94,11 @@ class SnapshotRenderer(object):
     def _setup_plot(self, history_length, body_count):
         self._history_length = history_length
         self._body_count = body_count
+
+        self._fig = plt.figure()
+        self._ax = axes3d.Axes3D(self._fig)
+        
+        self._lines = []
 
         x_min_max, y_min_max, z_min_max = None, None, None
 
