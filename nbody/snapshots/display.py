@@ -16,13 +16,12 @@ import matplotlib.collections as mcollections
 
 
 class SnapshotRenderer(object):
-    def __init__(self, bodies, blocking=False, line_style="", marker_style=".", color=lambda x: "b", 
+    def __init__(self, snapshot_storage=None, line_style="", marker_style=".", color=lambda x: "b", 
                  history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
 
-        self._bodies = bodies
-        self._blocking = blocking
+        self._snapshot_storage = snapshot_storage
         self._line_style = line_style
         self._marker_style = marker_style
         self._drawing_style = self._marker_style + self._line_style
@@ -37,45 +36,49 @@ class SnapshotRenderer(object):
         self._fig = plt.figure()
         self._ax = axes3d.Axes3D(self._fig)
         
-        self._body_count = bodies.shape[1]
-        self._time_steps = None
-        if not self._blocking:
-            self._time_steps = bodies.shape[0]
-        else:
-            plt.ion()
-            self._num = 0          
-
         self._lines = []
 
-        self._setup_plot()
-        self._ani = None
-        if not self._blocking:
-            self._ani = animation.FuncAnimation(self._fig, self._update, self._time_steps,
-                                                interval=int(1000.0/fps), blit=False, repeat_delay=2000)
+        self._drawing_ready = False
+        self._animation_ready = False
+        if self._snapshot_storage and self._snapshot_storage.snapshot_count:
+            self._drawing_ready = True
+            self._setup_plot(snapshot_storage.snapshot_count, snapshot_storage.snapshot_shape[0])
 
-    def run(self, out_file=None, updated_data=None):
-        if self._blocking and updated_data is None:
-            raise ValueError("If renderer is set to blocking mode you have to pass in updates for each frame")
+    def run(self, out_file=None):
+        if not self._snapshot_storage.snapshot_count:
+            raise RuntimeError("The supplied SnapshotStorage is empty.")
 
-        if not self._blocking:
-            if out_file:
-                Writer = animation.writers['ffmpeg']
-                writer = Writer(fps=self._fps, metadata=dict(artist='Me'), bitrate=1800)
-                self._ani.save(out_file, writer=writer)
-            else:
-                plt.show()
+        if not self._animation_ready:
+            self._ani = animation.FuncAnimation(self._fig, self._update, self._snapshot_storage.snapshot_count,
+                                                interval=int(1000.0/self._fps), blit=False, repeat_delay=2000)
+            self._animation_ready = True
+
+        if out_file:
+            Writer = animation.writers['ffmpeg']
+            writer = Writer(fps=self._fps, metadata=dict(artist='Me'), bitrate=1800)
+            self._ani.save(out_file, writer=writer)
         else:
-            if out_file:
-                raise NotImplementedError("Can't save to file in interactive mode")
-            else:
-                self._bodies = updated_data
-                self._update_lines(self._num)
-                self._ax.figure.canvas.draw()
-                self._fig.show()
-                plt.pause(0.001)
+            plt.show()
 
-            self._num += 1
+    def display_step(self):
+        if not self._snapshot_storage.snapshot_count:
+            raise RuntimeError("The supplied SnapshotStorage is empty.")
 
+        if not self._drawing_ready: 
+            self._setup_plot(self._snapshot_storage.snapshot_count, self._snapshot_storage.snapshot_shape[0])
+            self._drawing_ready = True
+            plt.ion()
+
+        if self._num >= self._snapshot_storage.snapshot_count:
+            raise RuntimeError("Tried drawing more snapshots than were added to your SnapshotStorage.")
+
+        self._update_lines(self._num, self._snapshot_storage.snapshots)
+        self._ax.figure.canvas.draw()
+        self._fig.show()
+        plt.pause(0.001)
+
+        self._num += 1
+            
     @classmethod
     def for_clusters(cls, snapshot_storage, **kwargs):
         return cls(snapshot_storage, line_style="", marker_style=".", history_length=1, fade=False, **kwargs)
@@ -88,13 +91,17 @@ class SnapshotRenderer(object):
     def for_cluster_trajectories(cls, snapshot_storage, **kwargs):
         return cls(snapshot_storage, line_style="", marker_style=".", history_length=0, fade=False, **kwargs)
 
-    def _setup_plot(self):
+    def _setup_plot(self, history_length, body_count):
+        self._history_length = history_length
+        self._body_count = body_count
+
         x_min_max, y_min_max, z_min_max = None, None, None
 
         if not self._bounds:
-            x_min_max = [np.min(self._bodies[:, :, 0]), np.max(self._bodies[:, :, 0])]
-            y_min_max = [np.min(self._bodies[:, :, 1]), np.max(self._bodies[:, :, 1])]
-            z_min_max = [np.min(self._bodies[:, :, 2]), np.max(self._bodies[:, :, 2])]
+            snapshots = self._snapshot_storage.snapshots
+            x_min_max = [np.min(snapshots[:, :, 0]), np.max(snapshots[:, :, 0])]
+            y_min_max = [np.min(snapshots[:, :, 1]), np.max(snapshots[:, :, 1])]
+            z_min_max = [np.min(snapshots[:, :, 2]), np.max(snapshots[:, :, 2])]
             for min_max in [x_min_max, y_min_max, z_min_max]:
                 if min_max[0] == min_max[1]:
                     min_max[0] = -0.5
@@ -148,6 +155,7 @@ class SnapshotRenderer(object):
             """
             self._lines = self._ax.plot([], [], [], self._marker_style, color=color_palette[0])[0]
 
+        self._num = 0 
         #return self._lines
 
     def _get_color(self):
@@ -156,7 +164,7 @@ class SnapshotRenderer(object):
         else:
             return self._color(random.random())
 
-    def _update_lines(self, num):
+    def _update_lines(self, num, bodies):
         if self._fade:
             if num > 1:
                 data_start = max(0, num - self._history_length)
@@ -166,8 +174,8 @@ class SnapshotRenderer(object):
                                          range(data_start + 2, num)):
                     for i in range(self._body_count):
                         line = self._lines[line_t_pos * self._body_count + i]
-                        line.set_data(self._bodies[t - 2 : t, i, 0], self._bodies[t - 2 : t, i, 1])
-                        line.set_3d_properties(self._bodies[t - 2 : t, i, 2])
+                        line.set_data(bodies[t - 2 : t, i, 0], bodies[t - 2 : t, i, 1])
+                        line.set_3d_properties(bodies[t - 2 : t, i, 2])
 
                         if cur_hist_len > 1:
                             line.set_alpha((line_t_pos - cur_hist_start) / float(cur_hist_len))
@@ -176,33 +184,38 @@ class SnapshotRenderer(object):
             else:
                 for i in range(self._body_count):
                     line = self._lines[(self._history_length - 1) * self._body_count + i]
-                    line.set_data([self._bodies[num, i, 0]], [self._bodies[num, i, 1]])
-                    line.set_3d_properties([self._bodies[num, i, 2]])
+                    line.set_data([bodies[num, i, 0]], [bodies[num, i, 1]])
+                    line.set_3d_properties([bodies[num, i, 2]])
                     line.set_alpha(1.0)
         elif self._history_length > 1 or self._history_length <= 0:
             history_slice = slice(None, num)
             if self._history_length > 1:
                 history_slice = slice(max(0, num - self._history_length), num)
             for i, line in enumerate(self._lines):
-                line.set_data(self._bodies[history_slice, i, 0], self._bodies[history_slice, i, 1])
-                line.set_3d_properties(self._bodies[history_slice, i, 2])
+                line.set_data(bodies[history_slice, i, 0], bodies[history_slice, i, 1])
+                line.set_3d_properties(bodies[history_slice, i, 2])
                 line.set_alpha(1.0)
         else:
-            self._lines.set_data(self._bodies[num, :, 0], self._bodies[num, :, 1])
-            self._lines.set_3d_properties(self._bodies[num, :, 2])
-            self._lines.set_alpha(1.0)
+            if bodies.ndim == 3:
+                self._lines.set_data(bodies[num, :, 0], bodies[num, :, 1])
+                self._lines.set_3d_properties(bodies[num, :, 2])
+                self._lines.set_alpha(1.0)
+            elif bodies.ndim == 2:
+                self._lines.set_data(bodies[:, 0], bodies[:, 1])
+                self._lines.set_3d_properties(bodies[:, 2])
+                self._lines.set_alpha(1.0)
 
     def _update(self, num):
         if self._verbose:
             if self._verbose == 1:
                 sys.stdout.write(".")
                 sys.stdout.flush()
-                if num == self._bodies.shape[0] - 1:
-                    print ""
+                if num == self._snapshot_storage.snapshot_count - 1:
+                    print "|"
             elif self._verbose == 2:
-                print "{}/{}".format(num, self._bodies.shape[0])
+                print "{}/{}".format(num, self._snapshot_storage.snapshot_count)
 
-        self._update_lines(num)
+        self._update_lines(num, self._snapshot_storage.snapshots)
 
         return self._lines
 
