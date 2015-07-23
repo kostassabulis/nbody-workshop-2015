@@ -1,4 +1,3 @@
-import pickle
 import os
 
 import numpy as np
@@ -59,10 +58,7 @@ class SnapshotStorage(object):
             self._snapshots[self._current_index, :] = snapshot
 
         if self.output_path:
-            output_file_name = os.path.join(self.output_path, 
-                                            "nbody_snapshot.csv", 
-                                            str(self._current_index))
-
+            output_file_name = util.construct_snapshot_name(self.output_path, self._current_index)
             util.save_snapshot(snapshot, output_file_name)
 
         self._current_index += 1
@@ -80,10 +76,13 @@ class SnapshotStorage(object):
 
     def load(self, file_name):
         if not self.in_memory:
-            raise IOError("Can't load from file because in in-memory storage is disabled.")
+            raise IOError("Can't load from file because in-memory storage is disabled.")
+
+        if not os.path.exists(file_name):
+            raise IOError("Specified file does not exist.")
 
         if file_name.endswith(".pkl"):
-            self._snapshots = pickle.load(file_name)
+            self._snapshots = np.load(file_name)
         else:
             self._snapshots = util.load_snapshots(file_name)
         
@@ -98,11 +97,11 @@ class SnapshotStorage(object):
             raise IOError("Can't save the storage since it's not stored in memory.")
 
         if file_name.endswith(".pkl"):
-            pickle.dump(self._snapshots, file_name)
+            self._snapshots[:self._current_index, :].dump(file_name)
         else:
             for i in range(self._current_index):
-                output_file_name = os.path.join(file_name, "nbody_snapshot.csv", str(i))
-                util.save_snapshot(self._snapshots[self._current_index, :], output_file_name)
+                output_file_name = util.construct_snapshot_name(file_name, i)
+                util.save_snapshot(self._snapshots[i, :], output_file_name)
 
     @property
     def snapshots(self):
