@@ -37,7 +37,7 @@ class SnapshotRenderer(object):
         self._animation_ready = False
         if self._snapshot_storage and self._snapshot_storage.snapshot_count:
             self._drawing_ready = True
-            self._setup_plot(snapshot_storage.snapshot_count, snapshot_storage.snapshot_shape[0])
+            self._setup_plot(snapshot_storage.snapshot_shape[0])
 
     def run(self, out_file=None):
         if not self._snapshot_storage.snapshot_count:
@@ -104,8 +104,7 @@ class SnapshotRenderer(object):
         kwargs.setdefault("fade", False)
         return cls(snapshot_storage, **kwargs)
 
-    def _setup_plot(self, history_length, body_count):
-        self._history_length = history_length
+    def _setup_plot(self, body_count):
         self._body_count = body_count
 
         self._fig = plt.figure()
@@ -183,6 +182,9 @@ class SnapshotRenderer(object):
             return self._color(random.random())
 
     def _update_lines(self, num, bodies):
+        if bodies.ndim == 3 and num >= bodies.shape[0]:
+            raise IndexError("Trying to draw an out of range time step.")
+
         if self._fade:
             if num > 1:
                 data_start = max(0, num - self._history_length)

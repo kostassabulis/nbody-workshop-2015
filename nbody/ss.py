@@ -7,6 +7,7 @@ import euler
 import leapfrog
 import constants
 from snapshots.display import SnapshotRenderer
+from snapshots.storage import SnapshotStorage
 
 bodies = namedtuple("Bodies", ["r", "v", "m"])
 bodies.r = np.array([
