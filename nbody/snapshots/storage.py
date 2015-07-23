@@ -126,5 +126,5 @@ class SnapshotStorage(object):
         self._snapshots = np.zeros((self._reserved_length, ) + self.snapshot_shape)
 
     def _expand_snapshot_storage(self):
-        self._snapshots = numpy.concatenate(self._snapshots, np.zeros(self._snapshots.shape))
+        self._snapshots = np.concatenate([self._snapshots, np.zeros(self._snapshots.shape)])
         self._reserved_length *= 2

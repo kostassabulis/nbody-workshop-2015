@@ -26,13 +26,11 @@ total_time = 100 * constants.YR
 dt = 0.001 * constants.YR
 dt_output = 0.01 * constants.YR
 
-body_history = np.zeros((total_time / dt_output + 1, bodies.r.shape[0], bodies.r.shape[1]))
-body_history[0, :, :] = bodies.r
+snapshot_storage = SnapshotStorage()
+snapshot_storage.append(bodies.r)
 
-
-snapshot_renderer = SnapshotRenderer(body_history, blocking=True, line_style="-", marker_style=".", 
-                                     history_length=0, fade=False, color=cm.get_cmap(), verbose=0,
-                                     bounds=(-constants.AU, constants.AU))
+snapshot_renderer = SnapshotRenderer.for_orbits(snapshot_storage, bounds=(-constants.AU, constants.AU))
+snapshot_renderer.display_step()
 
 for i, current_t in enumerate(euler.simulate_step(bodies, dt, G=constants.G, dt_output=dt_output)):
     if current_t >= total_time:
@@ -40,5 +38,5 @@ for i, current_t in enumerate(euler.simulate_step(bodies, dt, G=constants.G, dt_
 
     print "{}/{}".format(current_t, total_time)
     
-    body_history[i + 1, :, :] = bodies.r
-    snapshot_renderer.run(updated_data=body_history[:i + 1, :, :])
+    snapshot_storage.append(bodies.r)
+    snapshot_renderer.display_step()
