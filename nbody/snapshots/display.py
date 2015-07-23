@@ -16,7 +16,7 @@ import matplotlib.collections as mcollections
 
 
 class SnapshotRenderer(object):
-    def __init__(self, snapshot_storage=None, line_style="", marker_style=".", color=lambda x: "b", 
+    def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b", 
                  history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
@@ -81,15 +81,28 @@ class SnapshotRenderer(object):
             
     @classmethod
     def for_clusters(cls, snapshot_storage, **kwargs):
-        return cls(snapshot_storage, line_style="", marker_style=".", history_length=1, fade=False, **kwargs)
+        kwargs.setdefault("line_style", "")
+        kwargs.setdefault("marker_style", ".")
+        kwargs.setdefault("history_length", 1)
+        kwargs.setdefault("fade", False)
+        return cls(snapshot_storage, **kwargs)
 
     @classmethod
     def for_orbits(cls, snapshot_storage, **kwargs):
-        return cls(line_style="-", marker_style=".", history_length=0, fade=False, color=cm.get_cmap(), **kwargs)
+        kwargs.setdefault("line_style", "-")
+        kwargs.setdefault("marker_style", ".")
+        kwargs.setdefault("history_length", 0)
+        kwargs.setdefault("fade", False)
+        kwargs.setdefault("color", cm.get_cmap())
+        return cls(snapshot_storage, **kwargs)
 
     @classmethod
     def for_cluster_trajectories(cls, snapshot_storage, **kwargs):
-        return cls(snapshot_storage, line_style="", marker_style=".", history_length=0, fade=False, **kwargs)
+        kwargs.setdefault("line_style", "")
+        kwargs.setdefault("marker_style", ".")
+        kwargs.setdefault("history_length", 0)
+        kwargs.setdefault("fade", False)
+        return cls(snapshot_storage, **kwargs)
 
     def _setup_plot(self, history_length, body_count):
         self._history_length = history_length
