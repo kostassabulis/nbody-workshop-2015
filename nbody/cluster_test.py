@@ -22,7 +22,7 @@ bodies = icc.uniform_distribution(500, d)
 snapshot_storage = SnapshotStorage()
 snapshot_storage.append(bodies.r)
 
-snapshot_renderer = SnapshotRenderer.for_clusters(snapshot_storage, bounds=[-2*d, 2*d])
+snapshot_renderer = SnapshotRenderer.for_clusters(snapshot_storage, bounds=[-d, d])
 snapshot_renderer.display_step()
 
 for i, current_t in enumerate(leapfrog.simulate_step(bodies, dt, constants.G, epsilon, dt_output=dt_output)):
@@ -33,3 +33,5 @@ for i, current_t in enumerate(leapfrog.simulate_step(bodies, dt, constants.G, ep
 
     snapshot_storage.append(bodies.r)
     snapshot_renderer.display_step()
+
+snapshot_storage.save("snapshot.pkl")
