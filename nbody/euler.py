@@ -18,6 +18,9 @@ def simulate_step(bodies, dt, G=1.0, dt_output=None):
         
     while True:
         for i in range(N_bodies):
+            bodies.r[i, :] += bodies.v[i, :] * dt
+			
+        for i in range(N_bodies):
             vel_update = np.array([0.0, 0.0, 0.0])
             for k in range(N_bodies):
                 if i == k:
@@ -27,8 +30,7 @@ def simulate_step(bodies, dt, G=1.0, dt_output=None):
             
             bodies.v[i, :] += vel_update * dt
 
-        for i in range(N_bodies):
-            bodies.r[i, :] += bodies.v[i, :] * dt
+
 
         if current_step * dt_output <= current_t:
             current_step += 1
