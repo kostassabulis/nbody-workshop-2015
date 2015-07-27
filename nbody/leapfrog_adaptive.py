@@ -11,7 +11,7 @@ def calculate_dt(V, A, N_bodies, alpha):
             a_max_index = i
             
     v = np.sqrt(np.sum(V[a_max_index,:]**2))
-    return alpha*v/a_max
+    return alpha*v/np.sqrt(a_max)
 
 def simulate_step(bodies, dt_min, G, epsilon, dt_output, alpha):
     current_t = 0
