@@ -1,4 +1,4 @@
-from collections import namedtuple
+zfrom collections import namedtuple
 
 import numpy as np
 #import matplotlib.cm as cm
@@ -7,10 +7,11 @@ import numpy as np
 #import leapfrog
 import leapfrog_adaptive
 import constants
+from bodies import Bodies
 from snapshots.display import SnapshotRenderer
 from snapshots.storage import SnapshotStorage
 
-bodies = namedtuple("Bodies", ["r", "v", "m"])
+bodies = Bodies()
 bodies.r = np.array([
         [0.0, 0.0, 0.0],
         [0.387 * constants.AU, 0.0, 0.0],
