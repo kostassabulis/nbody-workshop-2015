@@ -12,6 +12,8 @@ __author__ = 'Tomas'
 
 from collections import namedtuple
 import numpy as np
+
+from bodies import Bodies
 import constants
 
 def plummer(N, r_pl): 
@@ -22,7 +24,7 @@ def plummer(N, r_pl):
     xStars, yStars, zStars = vector_projection(N, rStars)
     vStars = velocity_kepler(N, mStars, rStars)
     v_xStars, v_yStars, v_zStars = vector_projection(N, vStars)
-    bodies = namedtuple("Bodies", ["r", "v", "m"])
+    bodies = Bodies()
     bodies.r = np.transpose(np.array([xStars, yStars, zStars]))
     bodies.m = np.array(mStars)
     bodies.v = np.transpose(np.array([v_xStars, v_yStars, v_zStars]))
@@ -32,7 +34,7 @@ def plummer(N, r_pl):
 def uniform_distribution(N, R):
     mStars = np.ones(N) * constants.SOLAR_MASS
     xStars, yStars, zStars = vector_projection(N, np.random.sample(N) * R)
-    bodies = namedtuple("Bodies", ["r", "v", "m"])
+    bodies = Bodies()
     bodies.r = np.transpose(np.array([xStars, yStars, zStars]))
     bodies.m = np.array(mStars)
     bodies.v = np.zeros(bodies.r.shape)
