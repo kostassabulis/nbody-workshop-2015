@@ -12,17 +12,17 @@ def calc_vel_update(positions, mass, G, dt):
 def simulate_step(bodies, dt, G=1.0, dt_output=None):
     current_t = 0
     current_step = 0
-    N_bodies = bodies.r.shape[0]
+    n_bodies = bodies.r.shape[0]
     if not dt_output:
         dt_output = dt
         
     while True:
-        for i in range(N_bodies):
+        for i in range(n_bodies):
             bodies.r[i, :] += bodies.v[i, :] * dt
 			
-        for i in range(N_bodies):
+        for i in range(n_bodies):
             vel_update = np.array([0.0, 0.0, 0.0])
-            for k in range(N_bodies):
+            for k in range(n_bodies):
                 if i == k:
                     continue
                     

@@ -5,11 +5,11 @@ import numpy as np
 def simulate_step(bodies, dt, G, epsilon, dt_output=None):
     current_t = 0
     current_step = 0
-    N_bodies = bodies.r.shape[0]
+    n_bodies = bodies.r.shape[0]
     if not dt_output:
         dt_output = dt
 
-    for i in range(N_bodies):
+    for i in range(n_bodies):
         coord_diff = bodies.r - bodies.r[i, :]
         r_ik3 = (np.sum(coord_diff**2, axis=1) + epsilon**2)**1.5 #+ 1e-16
         bodies.v[i, :] += 0.5 * dt * G * np.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
@@ -17,7 +17,7 @@ def simulate_step(bodies, dt, G, epsilon, dt_output=None):
     while True:
         bodies.r += dt * bodies.v
         
-        for i in range(N_bodies):        
+        for i in range(n_bodies):        
             coord_diff = bodies.r - bodies.r[i, :]
             r_ik3 = (np.sum(coord_diff**2, axis=1) + epsilon**2)**1.5 #+ 1e-16
             bodies.v[i, :] += dt * G * np.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
