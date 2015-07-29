@@ -1,7 +1,7 @@
 *.xml
 *.mp4
 *.pyc
+*.pkl
 
 nbody/.idea/.name
 nbody/.idea/nbody.iml
-nbody/snapshot.pkl
