@@ -1,5 +1,3 @@
-zfrom collections import namedtuple
-
 import numpy as np
 #import matplotlib.cm as cm
 
