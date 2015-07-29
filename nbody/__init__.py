@@ -9,4 +9,9 @@ import euler
 import icc
 import leapfrog
 import leapfrog_adaptive
-import leapfrog_gpu
+
+try:
+    import leapfrog_gpu
+except ImportError:
+    pass
+    
