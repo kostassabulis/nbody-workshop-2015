@@ -10,6 +10,8 @@ __author__ = 'Tomas'
 ## uniform_distribution(N, R) N - number of stars; R - zvaigzdiu sferos spindulys
 ## zvaigzdziu mases grazinamos kilogramais. koordinates grazinamos R vienetais. Greiciai = 0
 
+import math
+
 import numpy as np
 
 from bodies import Bodies
@@ -30,14 +32,24 @@ def plummer(N, r_pl):
 
     return bodies
 
-def uniform_distribution(N, R):
-    mStars = np.ones(N) * constants.SOLAR_MASS
-    xStars, yStars, zStars = vector_projection(N, np.random.sample(N) * R)
+def uniform_sphere(N, R):
+    phi = np.random.random((N)) * 2.0 * math.pi
+    costheta = (np.random.random((N)) - 0.5) * 2.0
+    u = np.random.random((N))
+
+    theta = np.arccos(costheta)
+    r = R *  u**(1.0/3.0)
+
+    x_stars = r * np.sin(theta) * np.cos(phi) 
+    y_stars = r * np.sin(theta) * np.sin(phi)
+    z_stars = r * np.cos(theta)
+   
     bodies = Bodies()
-    bodies.r = np.transpose(np.array([xStars, yStars, zStars]))
-    bodies.m = np.array(mStars)
+    bodies.r = np.transpose(np.array([x_stars, y_stars, z_stars]))
+    bodies.m = np.ones(N) * constants.SOLAR_MASS
     bodies.v = np.zeros(bodies.r.shape)
-    M = np.sum(mStars)
+    
+    M = np.sum(bodies.m)
     ro = M/(4./3.*np.pi*R**3)
     print "Expected collapse time : %e" %np.sqrt(3*np.pi/32./constants.G/ro)
     return bodies

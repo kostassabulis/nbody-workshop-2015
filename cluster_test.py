@@ -9,7 +9,7 @@ dt_output = 10 * nb.constants.YR
 epsilon = 0.2 #Smoothing parameter
 d= 1.0e14
 alpha = 0.0001 #adaptive time step parameter
-bodies = nb.icc.uniform_distribution(500, d)
+bodies = nb.icc.uniform_sphere(500, d)
 #bodies.m *= constants.SOLAR_MASS # tai jau daroma icc
 
 snapshot_storage = SnapshotStorage()
