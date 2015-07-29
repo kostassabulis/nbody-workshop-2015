@@ -72,7 +72,7 @@ class SnapshotRenderer(object):
         if self._num >= self._snapshot_storage.snapshot_count:
             raise RuntimeError("Tried drawing more snapshots than were added to your SnapshotStorage.")
 
-        self._update_lines(self._num, self._snapshot_storage.snapshots)
+        self._update_lines(self._num, self._snapshot_storage.snapshots[:, :, :3])
         self._ax.figure.canvas.draw()
         self._fig.show()
         plt.pause(0.001)
@@ -115,7 +115,7 @@ class SnapshotRenderer(object):
         x_min_max, y_min_max, z_min_max = None, None, None
 
         if not self._bounds:
-            snapshots = self._snapshot_storage.snapshots
+            snapshots = self._snapshot_storage.snapshots[:, :, :3]
             x_min_max = [np.min(snapshots[:, :, 0]), np.max(snapshots[:, :, 0])]
             y_min_max = [np.min(snapshots[:, :, 1]), np.max(snapshots[:, :, 1])]
             z_min_max = [np.min(snapshots[:, :, 2]), np.max(snapshots[:, :, 2])]

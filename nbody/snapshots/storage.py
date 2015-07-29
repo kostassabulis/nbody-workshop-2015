@@ -1,5 +1,4 @@
 import os
-
 import numpy as np
 
 import util
@@ -41,12 +40,16 @@ class SnapshotStorage(object):
                 self._init_snapshot_storage()
 
     def append(self, snapshot):
+        snapshot_data = snapshot
+        if not isinstance(snapshot, np.ndarray):
+            snapshot_data = snapshot.to_array()
+            
         if self.in_memory:
             if self._snapshots is not None:
-                if snapshot.shape != self.snapshot_shape:
+                if snapshot_data.shape != self.snapshot_shape:
                     raise ValueError("This snapshot doesn't match the initialized shape.")
             else:
-                self.snapshot_shape = snapshot.shape
+                self.snapshot_shape = snapshot_data.shape
                 self._init_snapshot_storage()
 
             if self._current_index >= self._reserved_length:
@@ -55,11 +58,11 @@ class SnapshotStorage(object):
                 else:
                     self._expand_snapshot_storage()
 
-            self._snapshots[self._current_index, :] = snapshot
+            self._snapshots[self._current_index, :] = snapshot_data
 
         if self.output_path:
             output_file_name = util.construct_snapshot_name(self.output_path, self._current_index)
-            util.save_snapshot(snapshot, output_file_name)
+            util.save_snapshot(snapshot_data, output_file_name)
 
         self._current_index += 1
         self.snapshot_count += 1
