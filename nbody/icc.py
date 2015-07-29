@@ -10,7 +10,6 @@ __author__ = 'Tomas'
 ## uniform_distribution(N, R) N - number of stars; R - zvaigzdiu sferos spindulys
 ## zvaigzdziu mases grazinamos kilogramais. koordinates grazinamos R vienetais. Greiciai = 0
 
-from collections import namedtuple
 import numpy as np
 
 from bodies import Bodies
