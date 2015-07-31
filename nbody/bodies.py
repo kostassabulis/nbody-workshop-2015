@@ -13,6 +13,6 @@ class Bodies(object):
         return np.concatenate([self.r, self.v, self.m[:, np.newaxis]], axis=1)
 
     def from_array(self, arr):
-        self.r = arr[:, :3]
-        self.v = arr[:, 3:6]
-        self.m = arr[:, 6:]
+        self.r = arr[:, :, :3]
+        self.v = arr[:, :, 3:6]
+        self.m = arr[:, :, 6]
