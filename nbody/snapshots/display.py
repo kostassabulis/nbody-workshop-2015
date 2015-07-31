@@ -5,7 +5,7 @@ import util
 import sys
 import time
 import argparse
-import pickle
+import cPickle
 
 import numpy as np
 import mpl_toolkits.mplot3d.axes3d as axes3d
@@ -42,7 +42,6 @@ class SnapshotRenderer(object):
     def run(self, out_file=None):
         if not self._snapshot_storage.snapshot_count:
             raise RuntimeError("The supplied SnapshotStorage is empty.")
-
 
         if not self._drawing_ready:
             self._setup_plot(self._snapshot_storage.snapshot_count, self._snapshot_storage.snapshot_shape[0])
@@ -179,7 +178,7 @@ class SnapshotRenderer(object):
         if isinstance(self._color, str):
             return self._color
         else:
-            return self._color(random.random())
+            return self._color(np.random.random())
 
     def _update_lines(self, num, bodies):
         if bodies.ndim == 3 and num >= bodies.shape[0]:
@@ -253,7 +252,7 @@ if __name__ == "__main__":
     
     bodies = None
     if args.directory.endswith(".pkl"):
-        bodies = pickle.load(args.directory)
+        bodies = cPickle.load(args.directory)
     else:
         bodies = util.load_snapshots(args.directory)
 

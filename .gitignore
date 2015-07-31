@@ -3,5 +3,7 @@
 *.pyc
 *.pkl
 
-nbody/.idea/.name
-nbody/.idea/nbody.iml
+/.idea/.name
+/.idea/nbody-workshop-2015.iml
+*.png
+*.name

@@ -1,19 +1,20 @@
 import nbody as nb
 from nbody.snapshots.display import SnapshotRenderer
 from nbody.snapshots.storage import SnapshotStorage
+import sys
 
 total_time = 1000 * nb.constants.YR
-dt_min = 0.01 * nb.constants.YR
+dt_min = 1 * nb.constants.YR
 dt_output = 10 * nb.constants.YR
 
 epsilon = 0.2 #Smoothing parameter
-d= 1.0e14
+d = 1.0e14
 alpha = 0.0001 #adaptive time step parameter
 bodies = nb.icc.uniform_sphere(500, d)
-#bodies.m *= constants.SOLAR_MASS # tai jau daroma icc
 
 snapshot_storage = SnapshotStorage()
 snapshot_storage.append(bodies)
+#sys.exit()
 
 snapshot_renderer = SnapshotRenderer.for_clusters(snapshot_storage, bounds=[-d, d])
 #snapshot_renderer.display_step()
