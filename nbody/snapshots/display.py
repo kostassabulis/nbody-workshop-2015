@@ -54,7 +54,7 @@ class SnapshotRenderer(object):
 
         if out_file:
             Writer = animation.writers['ffmpeg']
-            writer = Writer(fps=self._fps, metadata=dict(artist='Me'), bitrate=1800)
+            writer = Writer(fps=self._fps, metadata=dict(artist='Me'), bitrate=5000)
             self._ani.save(out_file, writer=writer)
         else:
             plt.show()
