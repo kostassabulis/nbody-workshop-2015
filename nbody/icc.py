@@ -51,11 +51,11 @@ def uniform_sphere(N, R):
     print "Expected collapse time : {:e}".format(np.sqrt(3*np.pi/32./constants.G/ro))
     return bodies
 
-def uniform_distribution(N, R):
-    koeff = 1./3.
+def uniform_distribution(N, R, koeff=1./3.):
+    #koeff nulemia pasiskirstyma.
     x_stars, y_stars, z_stars = vector_projection(N, np.power(np.random.sample(N), koeff) * R)
-    bodies = Bodies()
 
+    bodies = Bodies()
     bodies.r = np.transpose(np.array([x_stars, y_stars, z_stars]))
     bodies.m = np.ones(N) * constants.SOLAR_MASS
     bodies.v = np.zeros(bodies.r.shape)
