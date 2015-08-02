@@ -5,16 +5,30 @@ import util
 
 
 class SnapshotStorage(object):
-    """Stores snapshots of any type as they're passed in, can also automatically save to file.
+    """Managed memory storage for snapshots
 
-       :param snapshot_shape: the shape of the snapshot matrix as a tuple, 
-                              usually (object_count, 3) for storing coordinates of objects.
-       :param max_snapshots: the number of snapshots that will be stored, if specified storage
-                             can be sped up, as matrices don't need to be concatenated.
-       :param in_memory: sets whether snapshots should be stored in memory when append
-                         is called.
-       :param output_path: output path for snapshots. A snapshot is saved every time 
-                           append is called, if this is specified.
+    Stores snapshots passed in either as Bodies type objects or 2D numpy arrays. 
+    For each snapshot append has to be called, which stores it in memory
+    (and/or saves it to file). 
+
+    Args:
+        snapshot_shape: The shape of the snapshot matrix as a tuple, 
+            usually (object_count, 3) for storing coordinates of objects.
+        max_snapshots: The number of snapshots that will be stored. 
+            If this is specified, storage can be sped up, as matrices don't 
+            need to be concatenated.
+        in_memory: Sets whether snapshots should be stored in memory when append
+            is called (usualy when this is off you have to specify output_path).
+        output_path: Output path for snapshots. A snapshot is saved every time 
+            append is called, if this is specified.
+    
+    Examples:
+        Regular memory storage:
+        >>> storage = SnapshotStorage()
+        >>> initial_state = Bodies()
+        >>> storage.append(initial_state)
+        >>> for snapshot in simulation:
+        >>>     storage.append(snapshot)
     """
     def __init__(self, snapshot_shape=None, max_snapshots=None, 
                  in_memory=True, output_path=None):
@@ -78,6 +92,12 @@ class SnapshotStorage(object):
         return self._snapshots[index, :]
 
     def load(self, file_name):
+        """ Loads a snapshot storage
+
+        Args:
+            file_name: Can be either a directory with numbered .csv files, or a
+            numpy pickle (.pkl)
+        """
         if not self.in_memory:
             raise IOError("Can't load from file because in-memory storage is disabled.")
 
@@ -96,6 +116,13 @@ class SnapshotStorage(object):
         self.snapshot_count = self.max_snapshots
 
     def save(self, file_name):
+        """ Saves all appended snapshots to file or directory
+
+        Args:
+            file_name: Can be either a directory name, in which case .csv files
+                will be saved for each snapshot, or a .pkl file, in which case 
+                all snapshots will be stored in a numpy pickle.
+        """
         if not self.in_memory:
             raise IOError("Can't save the storage since it's not stored in memory.")
 
