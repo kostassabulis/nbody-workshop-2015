@@ -21,3 +21,8 @@ class Bodies(object):
         self.r = arr[:, :, :3]
         self.v = arr[:, :, 3:6]
         self.m = arr[:, :, 6]
+
+    def copy(self, arr):
+        self.r = np.copy(arr.r)
+        self.v = np.copy(arr.v)
+        self.m = np.copy(arr.m)
