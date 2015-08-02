@@ -16,6 +16,67 @@ import matplotlib.collections as mcollections
 
 
 class SnapshotRenderer(object):
+    """Class for drawing and animating snapshots using matplotlib
+
+    Displays snapshots taken from a SnapshotStorage either directly to screen,
+    or to video.
+
+    Args:
+        snapshot_storage: The SnapshotStorage class object that contains the
+            drawable snapshots. It can be passed in empty, as long as It
+            will be filled up before drawing begins.
+        line_style: The type of connector between the same object in different
+            points in time. Uses the same syntax as matplotlib ("", "-", "--",
+            ".-" and etc.)
+        marker_style: The type of marker to use for drawing objects. Uses the
+            same syntax as matplitlib (".", "o", "v" and etc.)
+        color: A function used for generating colors for objects. You can use
+            something like this to get a constant color for all objects:
+            lambda x: "r".
+        history_length: How many previous points will be drawn.
+            Most useful when a line_style is specified, to observe object
+            trajectories. 1 means that only the current time point will be drawn.
+            Use 0 or less to denote that all time points (up to the current one)
+            should be drawn.
+        fade: If True, trajectories will fade over time. WARNING: This will make
+            drawing super slow.
+        only_head: When set to True, and history length is specified, only
+            the current time point will get a marker, everything else will be 
+            drawn purely as specified by the line_style. Use False if you want
+            to see exactly where each point is at all time steps.
+        fps: How many frames per second to render the animation at. Only useful
+            when saving to a file.
+        bounds: Sets the figures maximum boundaries. Specify either one list
+            (ex: [-1e12, 1e12]), or a list for each dimension
+            (ex: [[-1e12, 1e12], [-1e12, 1e12] [-1e12, 1e12]])
+        verbose: Specifies how much information to output to the terminal.
+            0 is off.
+            1 will get you a dot for each rendered frame.
+            2 will write out the frame number.
+
+        Example:
+            This example loads a snapshot storage and draws it out to the screen
+            as an animation:
+            >>> storage = SnapshotStorage()
+            >>> storage.load("some_file.pkl")
+            >>> renderer = SnapshotRenderer.for_clusters(storage)
+            >>> renderer.run()
+
+            If you want to save a video to file (currently only mp4 videos are
+            supported), do this:
+            >>> renderer.run("file_name.mp4")
+
+            If you prefer to render each frame separately (useful for displaying
+            results immediatly as they arrive from an integrator), do this:
+            >>> storage = SnapshotStorage()
+            >>> for snapshot in snapshots:
+            >>>     storage.append(snapshot) 
+            >>>     renderer.display_step()
+            Notice that you can only call display_step() the number of times
+            equal to how many snapshots you have. Either load all snapshots and
+            pay attention to how many you loaded, or just call display_step 
+            after each time you append a snapshot to the associated storage.
+    """
     def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b", 
                  history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0):
         if history_length <= 2 and fade:
@@ -40,6 +101,16 @@ class SnapshotRenderer(object):
             self._setup_plot(snapshot_storage.snapshot_shape[0])
 
     def run(self, out_file=None):
+        """ Runs the whole animation, drawing all snapshots in sequence
+
+        Don't forget to add ALL the snapshot you want to draw to the associated
+        SnapshotStorage.
+
+        Args:
+            out_file: If this is None, everything will be displayed on screen.
+                Otherwise, if a mp4 output file is specified, a video will be
+                saved
+        """
         if not self._snapshot_storage.snapshot_count:
             raise RuntimeError("The supplied SnapshotStorage is empty.")
 
@@ -60,6 +131,11 @@ class SnapshotRenderer(object):
             plt.show()
 
     def display_step(self):
+        """ Displays one frame from the screen
+
+        A SnapshotStorage doesn't have to be full before calling this, but make
+        sure it doesn't run out of snapshots when you keep calling it.
+        """
         if not self._snapshot_storage.snapshot_count:
             raise RuntimeError("The supplied SnapshotStorage is empty.")
 
@@ -80,6 +156,8 @@ class SnapshotRenderer(object):
             
     @classmethod
     def for_clusters(cls, snapshot_storage, **kwargs):
+        """ Initializes a SnapshotRenderer object for viewing clusters
+        """
         kwargs.setdefault("line_style", "")
         kwargs.setdefault("marker_style", ".")
         kwargs.setdefault("history_length", 1)
@@ -88,6 +166,8 @@ class SnapshotRenderer(object):
 
     @classmethod
     def for_orbits(cls, snapshot_storage, **kwargs):
+        """ Initializes a SnapshotRenderer object for viewing orbis 
+        """
         kwargs.setdefault("line_style", "-")
         kwargs.setdefault("marker_style", ".")
         kwargs.setdefault("history_length", 0)
@@ -97,6 +177,11 @@ class SnapshotRenderer(object):
 
     @classmethod
     def for_cluster_trajectories(cls, snapshot_storage, **kwargs):
+        """ Initializes a SnapshotRenderer object for viewing trajectories
+
+        This is very similar to the one used for clusters, only it draws
+        trajectories.
+        """
         kwargs.setdefault("line_style", "")
         kwargs.setdefault("marker_style", ".")
         kwargs.setdefault("history_length", 0)
