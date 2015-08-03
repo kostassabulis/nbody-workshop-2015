@@ -109,15 +109,10 @@ def potential_energy_plot_other(data, out_file=None, show=True, retrieve=False, 
     nbody.copy(data)
     all_potential_energy = np.zeros(nbody.m.shape[0])
     for i in range(0, nbody.m.shape[0], 50):
-        print i
+        #print i
         for j in range(nbody.m.shape[1]):
             for k in range(j):
-<<<<<<< HEAD
-                #print nbody.r[i, j, :]
-                distance = np.sum(np.power(nbody.r[i, j, :] - nbody.r[i, k, :],2))
-=======
                 distance = np.sqrt(np.sum(np.power(nbody.r[i, j, :] - nbody.r[i, k, :],2)))
->>>>>>> bffb4f6c679ac134a8a01836668837138b706bf7
                 all_potential_energy[i] -= constants.G*nbody.m[i, j]*nbody.m[i, k]/distance
 
     plt.plot(range(nbody.m.shape[0]), all_potential_energy, color=color)
@@ -129,9 +124,8 @@ def potential_energy_plot_other(data, out_file=None, show=True, retrieve=False, 
         plt.show()
     if retrieve is True:
         return all_potential_energy
-		
-		
-		
+
+
 def total_energy_plot(data, out_file=None, show=True, color='0.5'):
     all_kinetic_energy = kinetic_energy_plot(data, out_file=None, show=False, retrieve=True)
     all_potential_energy = potential_energy_plot(data, out_file=None, show=False, retrieve=True)
