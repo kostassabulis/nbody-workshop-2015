@@ -123,7 +123,7 @@ def potential_energy_plot_other(data, out_file=None, show=True, retrieve=False, 
     for i in range(nbody.m.shape[0]):
         for j in range(nbody.m.shape[1]):
             for k in range(j):
-                distance = np.sum(np.power(nbody.r[i, j, :] - nbody.r[i, k, :],2),axis=1)
+                distance = np.sqrt(np.sum(np.power(nbody.r[i, j, :] - nbody.r[i, k, :],2)))
                 all_potential_energy[i] -= constants.G*nbody.m[i, j]*nbody.m[i, k]/distance
 
     plt.plot(range(nbody.m.shape[0]), all_potential_energy, color=color)
