@@ -1,6 +1,7 @@
 import nbody as nb
 from nbody.snapshots.display import SnapshotRenderer
 from nbody.snapshots.storage import SnapshotStorage
+import numpy as np
 
 total_time = 1000 * nb.constants.YR
 dt_min = 0.1 * nb.constants.YR
@@ -10,7 +11,8 @@ epsilon = nb.constants.AU #Smoothing parameter
 d = 1.0e14
 alpha = 0.0001 #adaptive time step parameter
 N = 500
-bodies = nb.icc.plummer(N, d)
+bodies, distribution = nb.icc.plummer(N, d)
+bodies.time_arr(total_time, dt_output)
 
 snapshot_storage = SnapshotStorage()
 snapshot_storage.append(bodies)
@@ -25,8 +27,9 @@ for i, current_t in enumerate(nb.leapfrog_adaptive.simulate_step(bodies, dt_min,
     print "%e/%e" %(current_t, total_time)
 
     snapshot_storage.append(bodies)
-#    snapshot_renderer.display_step()
+#   snapshot_renderer.display_step()
 
-name = 'sphere_N' + str(N) + '_T' + str(int(total_time/nb.constants.YR))
-snapshot_renderer.run(name + ".mp4")
-snapshot_storage.save("nbody/" + name +".pkl")
+name = '{:s}_N{:d}_T{:d}_E{:.0e}_d{:.0e}'.format(distribution, N, int(total_time / nb.constants.YR), epsilon, d)
+snapshot_renderer.run(name + "time_test.mp4")
+snapshot_storage.save("nbody/" + name + "time_test.pkl")
+np.save('nbody/{}_time.npy'.format(name), bodies.t)
