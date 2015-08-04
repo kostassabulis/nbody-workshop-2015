@@ -3,11 +3,13 @@
 
 import numpy as np
 
+
 class Bodies(object):
-    def __init__(self, r=None, v=None, m=None):
+    def __init__(self, r=None, v=None, m=None, t=None):
         self.r = r
         self.v = v
         self.m = m
+        self.t = t
 
     def to_array(self):
         return np.concatenate([self.r, self.v, self.m[:, np.newaxis]], axis=1)
@@ -26,3 +28,10 @@ class Bodies(object):
         self.r = np.copy(arr.r)
         self.v = np.copy(arr.v)
         self.m = np.copy(arr.m)
+        self.t = np.copy(arr.t)
+
+    def shape(self):
+        return self.r.shape, self.v.shape, self.m.shape #, self.t.shape
+
+    def time_arr(self, total, out_step):
+        self.t = np.zeros(int(total/out_step)+1)

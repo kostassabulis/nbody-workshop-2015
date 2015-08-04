@@ -27,7 +27,7 @@ def plummer(N, r_pl):
     bodies.m = np.array(mStars)
     bodies.v = np.transpose(np.array([v_xStars, v_yStars, v_zStars]))
 
-    return bodies
+    return bodies, 'plummer'
 
 def uniform_sphere(N, R):
     phi = np.random.random((N)) * 2.0 * np.pi
@@ -49,7 +49,7 @@ def uniform_sphere(N, R):
     M = np.sum(bodies.m)
     ro = M/(4./3.*np.pi*R**3)
     print "Expected collapse time : {:e}".format(np.sqrt(3*np.pi/32./constants.G/ro))
-    return bodies
+    return bodies, 'sphere'
 
 def uniform_distribution(N, R, koeff=1./3.):
     #koeff nulemia pasiskirstyma.
@@ -63,7 +63,7 @@ def uniform_distribution(N, R, koeff=1./3.):
     M = np.sum(bodies.m)
     ro = M/(4./3.*np.pi*R**3)
     print "Expected collapse time : {:e}".format(np.sqrt(3*np.pi/32./constants.G/ro))
-    return bodies
+    return bodies, 'dist{:.3}'.format(koeff)
 
 def IMF_salpeter(N, M_min, M_max):
     p = -2.35 +1 # Salpeter funkcijos koff. +1. nes suintegravus taip
