@@ -17,9 +17,10 @@ def distance_plot(data, out_file=None, show=True, retrieve=False, color='k'):
     for i in range(nbody.m.shape[0]):
         mean_distance[i] = np.mean(np.sqrt(np.sum(nbody.r[i, :, :] ** 2, axis=1)), axis=0)
 
-    plt.plot(range(nbody.m.shape[0]), mean_distance, color=color)
+    plt.plot(nbody.t, mean_distance, color=color)
     plt.xlabel('Time')  # Turi buti
     plt.ylabel('Mean distance, m')
+    plt.xlim((0, nbody.t[-1]))
     if out_file is not None:
         plt.savefig(out_file)
     if show is True:
@@ -47,9 +48,10 @@ def half_mass_radius_plot(data, out_file=None, show=True, retrieve=False, color=
             j += 1
         half_mass_radius[i] = distances[i, j]
 
-    plt.plot(range(nbody.m.shape[0]), half_mass_radius, color=color)
+    plt.plot(nbody.t, half_mass_radius, color=color)
     plt.xlabel('Time')  # Turi buti
     plt.ylabel('Half mass radius, m')
+    plt.xlim((0, nbody.t[-1]))
     if out_file is not None:
         plt.savefig(out_file)
     if show is True:
@@ -65,9 +67,10 @@ def kinetic_energy_plot(data, out_file=None, show=True, retrieve=False, color='r
     for i in range(nbody.m.shape[0]):
         all_kinetic_energy[i] = np.sum(np.sum(nbody.v[i] ** 2, axis=1) * nbody.m[i] / 2.)
 
-    plt.plot(range(nbody.m.shape[0]), all_kinetic_energy, color=color)
+    plt.plot(nbody.t, all_kinetic_energy, color=color)
     plt.xlabel('Time')  # Turetu buti
     plt.ylabel('Kinetic energy')
+    plt.xlim((0, nbody.t[-1]))
     if out_file is not None:
         plt.savefig(out_file)
     if show is True:
@@ -94,9 +97,10 @@ def potential_energy_plot(data, out_file=None, show=True, retrieve=False, color=
             confined_mass += nbody.m[i, j]
         all_potential_energy[i] = np.sum(potential_energy)
 
-    plt.plot(range(nbody.m.shape[0]), all_potential_energy, color=color)
+    plt.plot(nbody.t, all_potential_energy, color=color)
     plt.xlabel('Time')  # Turetu buti
     plt.ylabel('Potential energy')
+    plt.xlim((0, nbody.t[-1]))
     if out_file is not None:
         plt.savefig(out_file)
     if show is True:
@@ -115,9 +119,10 @@ def potential_energy_plot_other(data, out_file=None, show=True, retrieve=False, 
                 distance = np.sqrt(np.sum(np.power(nbody.r[i, j, :] - nbody.r[i, k, :],2)))
                 all_potential_energy[i] -= constants.G*nbody.m[i, j]*nbody.m[i, k]/distance
 
-    plt.plot(range(nbody.m.shape[0]), all_potential_energy, color=color)
+    plt.plot(nbody.t, all_potential_energy, color=color)
     plt.xlabel('Time')  # Turetu buti
     plt.ylabel('Potential energy')
+    plt.xlim((0, nbody.t[-1]))
     if out_file is not None:
         plt.savefig(out_file)
     if show is True:
@@ -127,12 +132,15 @@ def potential_energy_plot_other(data, out_file=None, show=True, retrieve=False, 
 
 
 def total_energy_plot(data, out_file=None, show=True, color='0.5'):
+    nbody = Bodies()
+    nbody.copy(data)
     all_kinetic_energy = kinetic_energy_plot(data, out_file=None, show=False, retrieve=True)
     all_potential_energy = potential_energy_plot(data, out_file=None, show=False, retrieve=True)
     #plt.clf()
-    plt.plot(range(data.m.shape[0]), all_kinetic_energy + all_potential_energy, color=color)
+    plt.plot(nbody.t, all_kinetic_energy + all_potential_energy, color=color)
     #plt.plot(range(data.m.shape[0]), all_kinetic_energy / all_potential_energy, color='k')
     plt.ylabel('Energy')
+    plt.xlim((0, nbody.t[-1]))
     if out_file is not None:
         plt.savefig(out_file)
     if show is True:
@@ -141,7 +149,8 @@ def total_energy_plot(data, out_file=None, show=True, color='0.5'):
 
 if __name__ == "__main__":
     bodies = Bodies()
-    bodies.from_pickle(np.load("plummer_N500_T1000.pkl"))
+    bodies.from_pickle(np.load("plummer_N500_T100_E1e-20_d1e+14.pkl"))
+    bodies.t = np.load('plummer_N500_T100_E1e-20_d1e+14_time.npy')
 
     #galima pasidaryti kaukes, kad pvz tam paciam plote paziureti skirtigu masiu grupiu zvaigzdziu atstumus iki centro
     #mask = [bodies.m[0, :] > 3*constants.SOLAR_MASS]
