@@ -225,15 +225,12 @@ def potential_energy_center_off_plot(data, out_file=None, show=True, retrieve=Fa
 
 
 def potential_energy_plot_other(data, out_file=None, show=True, retrieve=False, color='b'):
-    nbody = Bodies()
-    nbody.copy(data)
+    nbody = Bodies().copy(data)
     all_potential_energy = np.zeros(nbody.m.shape[0])
-    for i in range(0, nbody.m.shape[0], 50):
-        # print i
-        for j in range(nbody.m.shape[1]):
-            for k in range(j):
-                distance = np.sqrt(np.sum(np.power(nbody.r[i, j, :] - nbody.r[i, k, :], 2)))
-                all_potential_energy[i] -= constants.G * nbody.m[i, j] * nbody.m[i, k] / distance
+    for j in range(nbody.m.shape[1]):
+        for k in range(j):
+            distances = np.sqrt(np.sum(np.power(nbody.r[:, j, :] - nbody.r[:, k, :], 2), axis=1))
+            all_potential_energy -= constants.G*nbody.m[:, j]*nbody.m[:, k]/distances
 
     plt.plot(nbody.t, all_potential_energy, color=color)
     plt.xlabel('Time, s')
