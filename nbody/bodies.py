@@ -35,3 +35,12 @@ class Bodies(object):
 
     def time_arr(self, total, out_step):
         self.t = np.zeros(int(total/out_step)+1)
+
+    def __getitem__(self, item):
+        self.r = self.r[item]
+        self.v = self.v[item]
+        self.m = self.m[item]
+        return self
+
+    def __repr__(self):
+        return '{}'.format(self.to_array())
