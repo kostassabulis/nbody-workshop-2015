@@ -11,3 +11,15 @@ PC = sc.parsec                  #3.086e+16 [m]
 
 TU = np.sqrt(PC**3/SOLAR_MASS/G) #Time Unit [s]
 TUcoef = YR/TU
+
+def unitstocode():
+    G = 1.
+    YR = TUcoef
+    SOLAR_MASS = 1.
+    return G, SOLAR_MASS, YR
+    
+def codetounits():
+    G = sc.G
+    YR = TUcoef
+    SOLAR_MASS = 1.98e30 
+    return G, SOLAR_MASS, YR
