@@ -16,8 +16,38 @@ def center_of_mass(cordinates, mass):
     x = np.sum(cordinates[:, 0] * mass) / all_mass
     y = np.sum(cordinates[:, 1] * mass) / all_mass
     z = np.sum(cordinates[:, 2] * mass) / all_mass
-    center = (x, y, z)
+    center = np.asarray(x, y, z)
     return center
+
+
+def core_density_plot(data, out_file=None, show=True, retrieve=False, color='k'):
+    nbody = Bodies()
+    nbody.copy(data)
+    core_density = np.zeros(nbody.m.shape[0])
+    distances = np.zeros(nbody.m.shape)
+    print distances.shape
+    for i in range(nbody.m.shape[0]):
+        total_mass = np.sum(nbody.m[i])
+        center = center_of_mass(nbody.r[i], nbody.m[i])
+        nbody[i].sort_by_radius(center=center)
+        distances[i] = np.sqrt(np.sum((nbody.r[i, :, :] - center) ** 2, axis=1))
+        confined_mass = 0
+        j = 0
+        while confined_mass <= total_mass * 0.1:
+            confined_mass += nbody.m[i, j]
+            j += 1
+        core_density[i] = 3 * confined_mass / 4 / np.pi / distances[i, j]**3
+
+    plt.plot(nbody.t, core_density, color=color)
+    plt.xlabel('Time, s')
+    plt.ylabel('Core density, kg m$^{-3}$')
+    plt.xlim((0, nbody.t[-1]))
+    if out_file is not None:
+        plt.savefig(out_file)
+    if show is True:
+        plt.show()
+    if retrieve is True:
+        return core_density
 
 
 def center_of_mass_plot(data, out_file=None, show=True, retrieve=False, color='k'):
@@ -27,7 +57,6 @@ def center_of_mass_plot(data, out_file=None, show=True, retrieve=False, color='k
     for i in range(nbody.m.shape[0]):
         centers_of_mass[i] = center_of_mass(nbody.r[i], nbody.m[i])
 
-    print centers_of_mass[:].shape
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(centers_of_mass[:, 0], centers_of_mass[:, 1], zs=centers_of_mass[:, 2], c=color, depthshade=False)
@@ -42,7 +71,7 @@ def center_of_mass_plot(data, out_file=None, show=True, retrieve=False, color='k
         return center_of_mass
 
 
-def distance_plot(data, out_file=None, show=True, retrieve=False, color='k'):
+def mean_distance_plot(data, out_file=None, show=True, retrieve=False, color='k'):
     nbody = Bodies()
     nbody.copy(data)
     mean_distance = np.zeros(nbody.m.shape[0])
@@ -62,7 +91,7 @@ def distance_plot(data, out_file=None, show=True, retrieve=False, color='k'):
         return mean_distance
 
 
-def distance_center_off_plot(data, out_file=None, show=True, retrieve=False, color='k'):
+def mean_distance_center_off_plot(data, out_file=None, show=True, retrieve=False, color='k'):
     nbody = Bodies()
     nbody.copy(data)
     mean_distance = np.zeros(nbody.m.shape[0])
@@ -225,7 +254,8 @@ def potential_energy_center_off_plot(data, out_file=None, show=True, retrieve=Fa
 
 
 def potential_energy_plot_other(data, out_file=None, show=True, retrieve=False, color='b'):
-    nbody = Bodies().copy(data)
+    nbody = Bodies()
+    nbody.copy(data)
     all_potential_energy = np.zeros(nbody.m.shape[0])
     for j in range(nbody.m.shape[1]):
         for k in range(j):
@@ -244,13 +274,16 @@ def potential_energy_plot_other(data, out_file=None, show=True, retrieve=False, 
         return all_potential_energy
 
 
-def total_energy_plot(data, out_file=None, show=True, color='0.5'):
+def total_energy_plot(data, out_file=None, show=True, show_ratio=False, color='0.5'):
     nbody = Bodies()
     nbody.copy(data)
     all_kinetic_energy = kinetic_energy_plot(data, out_file=None, show=False, retrieve=True)
     all_potential_energy = potential_energy_plot(data, out_file=None, show=False, retrieve=True)
-    plt.plot(nbody.t, all_kinetic_energy + all_potential_energy, color=color)
-    # plt.plot(range(data.m.shape[0]), all_kinetic_energy / all_potential_energy, color='k')
+    if show_ratio is True:
+        plt.clf()
+        plt.plot(nbody.t, all_kinetic_energy / all_potential_energy, color=color)
+    else:
+        plt.plot(nbody.t, all_kinetic_energy + all_potential_energy, color=color)
     plt.ylabel('Energy')
     plt.xlim((0, nbody.t[-1]))
     if out_file is not None:
@@ -270,8 +303,9 @@ if __name__ == "__main__":
     #print bodies.m[0, 0], bodies.m[0, 1]
 
     #center_of_mass_plot(bodies)
-    #distance_center_off_plot(bodies, color='r', show=False)
-    #distance_plot(bodies)
+    #core_density_plot(bodies)
+    #mean_distance_center_off_plot(bodies, color='r', show=False)
+    #mean_distance_plot(bodies)
     #half_mass_radius_center_off_plot(bodies, color='r', show=False)
     #half_mass_radius_plot(bodies)
     #kinetic_energy_plot(bodies)
