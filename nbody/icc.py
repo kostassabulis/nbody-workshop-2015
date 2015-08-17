@@ -90,3 +90,17 @@ def velocity_kepler(N, mStars, rStars):
         M += mStars[i]
         vStars[i] = np.sqrt(constants.G * M / rStars[i])
     return vStars
+
+def super_massive_black_hole(bodies, mass=4e6*constants.SOLAR_MASS, coords=(0, 0, 0), vel=(0, 0, 0)):
+    bodies.r[0] = coords
+    bodies.v[0] = vel
+    bodies.m[0] = mass
+    return bodies
+
+def test_galaxy(bodies, central_mass=4e6*constants.SOLAR_MASS, d=5e14):
+    bodies.r[:, 0] += d
+    bodies.v[:, 1] += np.sqrt(constants.G * central_mass / d)
+    bodies.r[0] = (0, 0, 0)
+    bodies.v[0] = (0, 0, 0)
+    bodies.m[0] = central_mass
+    return bodies

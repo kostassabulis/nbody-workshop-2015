@@ -28,7 +28,7 @@ def simulate_step(bodies, G, epsilon, dt_output, alpha, max_dt_bins):
         delta_v[i, :] = G * np.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
 
     dts = calculate_dts(bodies.v, delta_v, alpha, dt_output, max_dt_bins, n_bodies)
-    dt_min = min(dts)
+    dt_min = np.min(dts)
     times_update = np.ones(n_bodies) * current_t + dts
 
     for i in range(n_bodies):
