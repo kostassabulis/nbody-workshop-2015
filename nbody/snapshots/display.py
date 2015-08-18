@@ -78,7 +78,7 @@ class SnapshotRenderer(object):
             after each time you append a snapshot to the associated storage.
     """
     def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b", 
-                 history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0):
+                 history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0, angle=None):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
 
@@ -93,12 +93,14 @@ class SnapshotRenderer(object):
         self._fps = fps
         self._bounds = bounds
         self._verbose = verbose
+        self._angle = angle
 
         self._drawing_ready = False
         self._animation_ready = False
         if self._snapshot_storage and self._snapshot_storage.snapshot_count:
             self._drawing_ready = True
             self._setup_plot(snapshot_storage.snapshot_shape[0])
+
 
     def run(self, out_file=None):
         """ Runs the whole animation, drawing all snapshots in sequence
@@ -215,6 +217,20 @@ class SnapshotRenderer(object):
             else:
                 raise ValueError("Bounds len should be either 2 (min and max) or 3 (min and max for each dim)")
 
+        if self._angle is not None:
+            if not isinstance(self._angle, list):
+                self._elevation = self._angle
+                self._azimuth = 0
+            else:
+                if len(self._angle) == 2:
+                    self._elevation = self._angle[0]
+                    self._azimuth = self._angle[1]
+                if len(self._angle) != 2:
+                    raise ValueError("Angle must contain only 2 values for elevation and azimuth or just elevation.")
+        else:
+            self._elevation = None
+            self._azimuth = None
+
         self._ax.set_xlim3d(x_min_max)
         self._ax.set_xlabel('x')
 
@@ -223,6 +239,8 @@ class SnapshotRenderer(object):
 
         self._ax.set_zlim3d(z_min_max)
         self._ax.set_zlabel('z')
+
+        self._ax.view_init(elev=self._elevation, azim=self._azimuth)
 
         color_palette = [self._color(i / float(self._body_count)) for i in range(self._body_count)]
         self._c = color_palette

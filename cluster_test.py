@@ -22,7 +22,7 @@ bodies = nb.icc.test_galaxy(bodies, d=1e16)
 snapshot_storage = SnapshotStorage()
 snapshot_storage.append(bodies)
 
-snapshot_renderer = SnapshotRenderer.for_clusters(snapshot_storage, bounds=[-d, d])
+snapshot_renderer = SnapshotRenderer.for_clusters(snapshot_storage, bounds=[-1e16, 1e16], verbose=1, angle=[90, 00])
 #snapshot_renderer.display_step()
 
 for i, current_t in enumerate(nb.leapfrog_adaptive.simulate_step(bodies, G=nb.constants.G, epsilon=epsilon, dt_output=dt_output, alpha=alpha, max_dt_bins=5)):
@@ -35,7 +35,7 @@ for i, current_t in enumerate(nb.leapfrog_adaptive.simulate_step(bodies, G=nb.co
 #   snapshot_renderer.display_step()
 
 #nb.constants.G, nb.constants.SOLAR_MASS, nb.constants.YR = nb.constants.codetounits() #Back to SI units
-name = '{:s}_N{:d}_T{:d}_E{:.0e}_d{:.0e}_galaxy04'.format(distribution, N, int(total_time / nb.constants.YR), epsilon, d)
+name = '{:s}_N{:d}_T{:d}_E{:.0e}_d{:.0e}_galaxy00'.format(distribution, N, int(total_time / nb.constants.YR), epsilon, d)
 snapshot_renderer.run(name + ".mp4")
 snapshot_storage.save("nbody/" + name + ".pkl")
 np.save('nbody/{}_time.npy'.format(name), bodies.t)
