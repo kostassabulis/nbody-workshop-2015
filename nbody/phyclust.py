@@ -29,7 +29,6 @@ def core_density_plot(data, out_file=None, show=True, retrieve=False, color='k')
         total_mass = np.sum(nbody.m[i])
         center = center_of_mass(nbody.r[i], nbody.m[i])
         distances[i] = nbody[i].sort_by_radius(center=center)
-        #distances[i] = np.sqrt(np.sum((nbody.r[i, :, :] - center) ** 2, axis=1))
         confined_mass = 0
         j = 0
         while confined_mass <= total_mass * 0.1:
@@ -74,16 +73,15 @@ def mean_distance_plot(data, out_file=None, show=True, retrieve=False, color='k'
     nbody = Bodies()
     nbody.copy(data)
     mean_distance = np.zeros(nbody.m.shape[0])
-    mass = np.sum(nbody[0].m)
-    rad = np.zeros(nbody.m.shape[0])
+    #mass = np.sum(nbody[0].m)
+    #rad = np.zeros(nbody.m.shape[0])
     for i in range(nbody.m.shape[0]):
         center = center_of_mass(nbody.r[i], nbody.m[i])
         mean_distance[i] = np.mean(np.sqrt(np.sum((nbody.r[i, :, :] - center) ** 2, axis=1)), axis=0)
-        rad[i] = analytic_collapse.radius_at_t(nbody.t[i], 1e14, 3./4./np.pi*mass/1e14**3)
-
+        #rad[i] = analytic_collapse.radius_at_t(nbody.t[i], 1e14, 3./4./np.pi*mass/1e14**3)
 
     plt.plot(nbody.t, mean_distance, color=color)
-    plt.plot(nbody.t, rad, color='b')
+    #plt.plot(nbody.t, rad, color='b')
     plt.xlabel('Time, s')
     plt.ylabel('Mean distance, m')
     plt.xlim((0, nbody.t[-1]))
@@ -144,6 +142,50 @@ def half_mass_radius_plot(data, out_file=None, show=True, retrieve=False, color=
         return half_mass_radius
 
 
+def lagrange_radius_plot(data, out_file=None, show=True):
+    nbody = Bodies()
+    nbody.copy(data)
+    lag_radii_10 = np.zeros(nbody.m.shape[0])
+    lag_radii_25 = np.zeros(nbody.m.shape[0])
+    lag_radii_50 = np.zeros(nbody.m.shape[0])
+    lag_radii_80 = np.zeros(nbody.m.shape[0])
+    distances = np.zeros(nbody.m.shape)
+    for i in range(nbody.m.shape[0]):
+        total_mass = np.sum(nbody.m[i])
+        center = center_of_mass(nbody.r[i], nbody.m[i])
+        distances[i] = nbody[i].sort_by_radius(center=center)
+        confined_mass = 0
+        j = 0
+        while confined_mass <= total_mass * 0.1:
+            confined_mass += nbody.m[i, j]
+            j += 1
+        lag_radii_10[i] = distances[i, j]
+        while confined_mass <= total_mass * 0.25:
+            confined_mass += nbody.m[i, j]
+            j += 1
+        lag_radii_25[i] = distances[i, j]
+        while confined_mass <= total_mass * 0.5:
+            confined_mass += nbody.m[i, j]
+            j += 1
+        lag_radii_50[i] = distances[i, j]
+        while confined_mass <= total_mass * 0.8:
+            confined_mass += nbody.m[i, j]
+            j += 1
+        lag_radii_80[i] = distances[i, j]
+
+    plt.plot(nbody.t, lag_radii_10, color='r', label='10% mass radii')
+    plt.plot(nbody.t, lag_radii_25, color='b', label='25% mass radii')
+    plt.plot(nbody.t, lag_radii_50, color='g', label='50% mass radii')
+    plt.plot(nbody.t, lag_radii_80, color='k', label='80% mass radii')
+    plt.xlabel('Time, s')
+    plt.ylabel('Lagrange radii, m')
+    plt.xlim((0, nbody.t[-1]))
+    plt.legend(frameon=False, loc=0)
+    if out_file is not None:
+        plt.savefig(out_file)
+    if show is True:
+        plt.show()
+
 def half_mass_radius_center_off_plot(data, out_file=None, show=True, retrieve=False, color='k'):
     nbody = Bodies()
     nbody.copy(data)
@@ -151,8 +193,6 @@ def half_mass_radius_center_off_plot(data, out_file=None, show=True, retrieve=Fa
     distances = np.zeros(nbody.m.shape)
     for i in range(nbody.m.shape[0]):
         total_mass = np.sum(nbody.m[i])
-        #distances[i] = np.sqrt(np.sum(nbody.r[i, :, :] ** 2, axis=1))
-        # Turiu zvaigzdziu atstumus iki centro
         distances[i] = nbody[i].sort_by_radius()
         confined_mass = 0
         j = 0
@@ -291,23 +331,24 @@ def total_energy_plot(data, out_file=None, show=True, show_ratio=False, color='0
         plt.show()
 
 import analytic_collapse
+from matplotlib.colors import colorConverter
 if __name__ == "__main__":
     bodies = Bodies()
-    bodies.from_pickle(np.load("dist0.333_N500_T500_E1e+11_d1e+14.pkl"))
-    bodies.t = np.load('dist0.333_N500_T500_E1e+11_d1e+14_time.npy')
-
-
-    # galima pasidaryti kaukes, kad pvz tam paciam plote paziureti skirtigu masiu grupiu zvaigzdziu atstumus iki centro
-    # mask = [bodies.m[0, :] > 3*constants.SOLAR_MASS]
-    #print bodies.m[0, 0], bodies.m[0, 1]
-
+    bodies.from_pickle(np.load("plummer_N700_T1000_E1e+11_d2e+14.pkl"))
+    bodies.t = np.load('plummer_N700_T1000_E1e+11_d2e+14_time.npy')
+    #print colorConverter.colors
+    #for i in range(len(bodies[0].color)):
+        #print bodies[0].color[i][:3]
+        #print colorConverter.colors[tuple(bodies[0].color[i][:3])]
+        #print colorConverter.colors.get('k') == bodies[0].color[i][:3]
 
     #center_of_mass_plot(bodies)
     #core_density_plot(bodies)
-    mean_distance_center_off_plot(bodies, color='r', show=False)
-    mean_distance_plot(bodies)
+    #mean_distance_center_off_plot(bodies, color='r', show=False)
+    #mean_distance_plot(bodies)
     #half_mass_radius_center_off_plot(bodies, color='r', show=False)
     #half_mass_radius_plot(bodies)
+    #lagrange_radius_plot(bodies)
     #kinetic_energy_plot(bodies, show=False)
     #potential_energy_center_off_plot(bodies, color='r', show=False)
     #potential_energy_plot_other(bodies)
