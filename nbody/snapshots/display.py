@@ -12,6 +12,7 @@ import mpl_toolkits.mplot3d.axes3d as axes3d
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 import matplotlib.collections as mcollections
 
 
@@ -77,7 +78,7 @@ class SnapshotRenderer(object):
             pay attention to how many you loaded, or just call display_step 
             after each time you append a snapshot to the associated storage.
     """
-    def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b", 
+    def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b", colour=None,
                  history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0, angle=None):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
@@ -87,6 +88,7 @@ class SnapshotRenderer(object):
         self._marker_style = marker_style
         self._drawing_style = self._marker_style + self._line_style
         self._color = color
+        self._colour = colour
         self._history_length = history_length
         self._fade = fade
         self._only_head = only_head
@@ -162,7 +164,7 @@ class SnapshotRenderer(object):
         """
         kwargs.setdefault("line_style", "")
         kwargs.setdefault("marker_style", ".")
-        kwargs.setdefault("history_length", 1)
+        kwargs.setdefault("history_length", 0)
         kwargs.setdefault("fade", False)
         return cls(snapshot_storage, **kwargs)
 
@@ -172,7 +174,7 @@ class SnapshotRenderer(object):
         """
         kwargs.setdefault("line_style", "-")
         kwargs.setdefault("marker_style", ".")
-        kwargs.setdefault("history_length", 0)
+        kwargs.setdefault("history_length", 2)
         kwargs.setdefault("fade", False)
         kwargs.setdefault("color", cm.get_cmap())
         return cls(snapshot_storage, **kwargs)
@@ -242,7 +244,16 @@ class SnapshotRenderer(object):
 
         self._ax.view_init(elev=self._elevation, azim=self._azimuth)
 
-        color_palette = [self._color(i / float(self._body_count)) for i in range(self._body_count)]
+        #color_palette = [self._color(i / float(self._body_count)) for i in range(self._body_count)]
+        if self._colour is not None:
+            if self._history_length != 0:
+                raise ValueError("History_length must be 0 in under for different coloring to work.")
+            if mcolors.is_color_like(self._colour):
+                raise ValueError("Presented colors could not be converted to rgba values.")
+            else:
+                color_palette = mcolors.colorConverter.to_rgba_array(self._colour)
+        else:
+            color_palette = [self._color(i / float(self._body_count)) for i in range(self._body_count)]
         self._c = color_palette
         mark_every = [-1]
         if not self._only_head:
@@ -342,6 +353,7 @@ class SnapshotRenderer(object):
         return self._lines
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description="Render nbody simulation results.")
     parser.add_argument("directory", help="directory with all of the simulation files in a .csv format, or a pickled snapshot file")
     parser.add_argument("-c", "--color", type=str, help="specifies in what color to draw the bodies. If not set all bodies are drawn in different colors", choices=['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w'])
@@ -371,5 +383,13 @@ if __name__ == "__main__":
                                      history_length=args.timesteps, fade=args.fade, 
                                      color=color, fps=args.speed, verbose=verbose_level)
     body_renderer.run(out_file=args.out)
-    
-    sys.exit(0)
+
+    '''
+    #pervaizduoti jau turima .pkl faila
+
+    from storage import SnapshotStorage
+    storage = SnapshotStorage()
+    storage.load("../plummer_N500_T500_E1e+11_d1e+14_galaxy01.pkl")
+    renderer = SnapshotRenderer.for_clusters(storage, bounds=[-1e15, 1e15], verbose=1, angle=90)
+    renderer.run('../../plummer_N500_T500_E1e+11_d1e+14_galaxy01_angle90.mp4')
+    '''

@@ -51,14 +51,14 @@ class Bodies(object):
         return radius
 
     def __getitem__(self, item):
-        if len(self.r.shape) == 3:
+        if self.r.ndim == 3:
             k = Bodies()
             k.r = self.r[item]
             k.v = self.v[item]
             k.m = self.m[item]
             k.color = self.color[item]
             return k
-        if len(self.r.shape) == 2:
+        if self.r.ndim == 2:
             return self.r[item], self.v[item], self.m[item], self.color[item]
 
     def __repr__(self):
