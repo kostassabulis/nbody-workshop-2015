@@ -78,7 +78,7 @@ class SnapshotRenderer(object):
             pay attention to how many you loaded, or just call display_step 
             after each time you append a snapshot to the associated storage.
     """
-    def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b", colour=None,
+    def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b",
                  history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0, angle=None):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
@@ -88,7 +88,6 @@ class SnapshotRenderer(object):
         self._marker_style = marker_style
         self._drawing_style = self._marker_style + self._line_style
         self._color = color
-        self._colour = colour
         self._history_length = history_length
         self._fade = fade
         self._only_head = only_head
@@ -244,16 +243,12 @@ class SnapshotRenderer(object):
 
         self._ax.view_init(elev=self._elevation, azim=self._azimuth)
 
-        #color_palette = [self._color(i / float(self._body_count)) for i in range(self._body_count)]
-        if self._colour is not None:
-            if self._history_length != 0:
-                raise ValueError("History_length must be 0 in under for different coloring to work.")
-            if mcolors.is_color_like(self._colour):
-                raise ValueError("Presented colors could not be converted to rgba values.")
-            else:
-                color_palette = mcolors.colorConverter.to_rgba_array(self._colour)
-        else:
+        color_palette = None
+        if callable(self._color):
             color_palette = [self._color(i / float(self._body_count)) for i in range(self._body_count)]
+        else:
+            color_palette = self._color
+            
         self._c = color_palette
         mark_every = [-1]
         if not self._only_head:

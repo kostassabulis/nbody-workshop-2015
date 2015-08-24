@@ -2,19 +2,21 @@
 """
 
 import numpy as np
-from matplotlib.colors import colorConverter
-#a = colorConverter.colors
 
 class Bodies(object):
-    def __init__(self, r=None, v=None, m=None, t=None, color=None):
+    def __init__(self, r=None, v=None, m=None, t=None, tags=None):
         self.r = r
         self.v = v
         self.m = m
         self.t = t
-        self.color = color
+        self.tags = tags
 
     def to_array(self):
-        return np.concatenate([self.r, self.v, self.m[:, np.newaxis], colorConverter.to_rgba_array(self.color)], axis=1)
+        array = np.concatenate([self.r, self.v, self.m[:, np.newaxis]], axis=1)
+        if self.tags:
+            array = np.concatenate([array, self.tags[:, np.newaxis]], axis=1)
+
+        return array
 
     def from_array(self, arr):
         self.r = arr[:, :3]
@@ -35,7 +37,7 @@ class Bodies(object):
         self.t = np.copy(arr.t)
 
     def shape(self):
-        return self.r.shape, self.v.shape, self.m.shape, self.color.shape, self.t.shape
+        return self.r.shape, self.v.shape, self.m.shape, self.t.shape
 
     def time_arr(self, total, out_step):
         self.t = np.zeros(int(total/out_step)+1)
@@ -46,7 +48,7 @@ class Bodies(object):
         self.r = self.r[sorted_indexes]
         self.v = self.v[sorted_indexes]
         self.m = self.m[sorted_indexes]
-        self.color = self.color[sorted_indexes]
+        self.tags = self.tags[sorted_indexes]
         radius = radius[sorted_indexes]
         return radius
 
@@ -56,10 +58,10 @@ class Bodies(object):
             k.r = self.r[item]
             k.v = self.v[item]
             k.m = self.m[item]
-            k.color = self.color[item]
+            k.tags = self.tags[item]
             return k
         if self.r.ndim == 2:
-            return self.r[item], self.v[item], self.m[item], self.color[item]
+            return self.r[item], self.v[item], self.m[item], self.tags[item]
 
     def __repr__(self):
         return '{}'.format(self.to_array())
