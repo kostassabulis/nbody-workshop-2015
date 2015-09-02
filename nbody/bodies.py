@@ -4,7 +4,7 @@
 import numpy as np
 
 class Bodies(object):
-    def __init__(self, r=None, v=None, m=None, t=None, tags=None):
+    def __init__(self, r=None, v=None, m=None, t=0, tags=None):
         self.r = r
         self.v = v
         self.m = m
@@ -12,22 +12,23 @@ class Bodies(object):
         self.tags = tags
 
     def to_array(self):
-        array = np.concatenate([self.r, self.v, self.m[:, np.newaxis]], axis=1)
+        array = np.concatenate(
+            [self.r, self.v, self.m[:, np.newaxis], np.tile(np.asarray(self.t), self.m.shape)[:, np.newaxis]], 
+            axis=1)
+
         if self.tags:
             array = np.concatenate([array, self.tags[:, np.newaxis]], axis=1)
+        else:
+            array = np.concatenate([array, np.zeros_like(self.m)[:, np.newaxis]], axis=1)
 
         return array
 
-    def from_array(self, arr):
+    def from_array(self, arr, t=None):
         self.r = arr[:, :3]
         self.v = arr[:, 3:6]
         self.m = arr[:, 6]
-
-    def from_pickle(self, arr):
-        self.r = arr[:, :, :3]
-        self.v = arr[:, :, 3:6]
-        self.m = arr[:, :, 6]
-        self.color = arr[:, :, 7:]
+        self.t = arr[0, 7]
+        self.tags = arr[:, 8]
 
     def copy(self, arr):
         self.r = np.copy(arr.r)

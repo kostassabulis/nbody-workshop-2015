@@ -35,11 +35,11 @@ def simulate_step(bodies, G, epsilon, dt_output, alpha, max_dt_bins):
         bodies.v[i, :] += 0.5 * dts[i] * delta_v[i, :]
 
     while True:
+        bodies.t = current_t
         bodies.r += bodies.v * dt_min
         current_t += dt_min
 
         if current_step * dt_output <= current_t:
-            bodies.t[current_step] = current_t
             current_step += 1
             yield current_t
 
