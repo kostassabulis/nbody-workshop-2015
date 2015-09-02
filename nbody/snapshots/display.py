@@ -78,16 +78,21 @@ class SnapshotRenderer(object):
             pay attention to how many you loaded, or just call display_step 
             after each time you append a snapshot to the associated storage.
     """
-    def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b", recoloring_func=None,
+    def __init__(self, snapshot_storage, line_style="", marker_style=".", color=None, recoloring_func=None,
                  history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0, angle=None):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
+
+        if color is None:
+            self._color = lambda x: "b"
+        elif color is not None and recoloring_func is not None:
+            raise ValueError("Can't have both color and recoloring_func specified at the same time.")
 
         self._snapshot_storage = snapshot_storage
         self._line_style = line_style
         self._marker_style = marker_style
         self._drawing_style = self._marker_style + self._line_style
-        self._color = color
+        
         self._recoloring_func = recoloring_func
         self._history_length = history_length
         self._fade = fade
