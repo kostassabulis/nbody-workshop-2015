@@ -78,7 +78,7 @@ class SnapshotRenderer(object):
             pay attention to how many you loaded, or just call display_step 
             after each time you append a snapshot to the associated storage.
     """
-    def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b",
+    def __init__(self, snapshot_storage, line_style="", marker_style=".", color=lambda x: "b", recoloring_func=None,
                  history_length=1, fade=False, only_head=True, fps=15, bounds=None, verbose=0, angle=None):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
@@ -88,6 +88,7 @@ class SnapshotRenderer(object):
         self._marker_style = marker_style
         self._drawing_style = self._marker_style + self._line_style
         self._color = color
+        self._recoloring_func = recoloring_func
         self._history_length = history_length
         self._fade = fade
         self._only_head = only_head
@@ -150,7 +151,7 @@ class SnapshotRenderer(object):
         if self._num >= self._snapshot_storage.snapshot_count:
             raise RuntimeError("Tried drawing more snapshots than were added to your SnapshotStorage.")
 
-        self._update_lines(self._num, self._snapshot_storage.snapshots[:, :, :3])
+        self._update_lines(self._num, self._snapshot_storage.snapshots)
         self._ax.figure.canvas.draw()
         self._fig.show()
         plt.pause(0.001)
@@ -244,10 +245,11 @@ class SnapshotRenderer(object):
         self._ax.view_init(elev=self._elevation, azim=self._azimuth)
 
         color_palette = None
-        if callable(self._color):
-            color_palette = [self._color(i / float(self._body_count)) for i in range(self._body_count)]
-        else:
-            color_palette = self._color
+        if self._color is not None:
+            if callable(self._color):
+                color_palette = [self._color(i / float(self._body_count)) for i in range(self._body_count)]
+            else:
+                color_palette = self._color
             
         self._c = color_palette
         mark_every = [-1]
@@ -292,6 +294,12 @@ class SnapshotRenderer(object):
     def _update_lines(self, num, bodies):
         if bodies.ndim == 3 and num >= bodies.shape[0]:
             raise IndexError("Trying to draw an out of range time step.")
+    
+        colors = None
+        if bodies.ndim == 3:
+            colors = self._recoloring_func(bodies, num)
+        elif bodies.ndim == 2:
+            colors = self._recoloring_func(bodies[np.newaxis, :], 0)
 
         if self._fade:
             if num > 1:
@@ -304,6 +312,8 @@ class SnapshotRenderer(object):
                         line = self._lines[line_t_pos * self._body_count + i]
                         line.set_data(bodies[t - 2 : t, i, 0], bodies[t - 2 : t, i, 1])
                         line.set_3d_properties(bodies[t - 2 : t, i, 2])
+                        if self._recoloring_func is not None:
+                            line.set_color(colors[i])
 
                         if cur_hist_len > 1:
                             line.set_alpha((line_t_pos - cur_hist_start) / float(cur_hist_len))
@@ -315,6 +325,9 @@ class SnapshotRenderer(object):
                     line.set_data([bodies[num, i, 0]], [bodies[num, i, 1]])
                     line.set_3d_properties([bodies[num, i, 2]])
                     line.set_alpha(1.0)
+                    if self._recoloring_func is not None:
+                        line.set_color(colors[i])
+
         elif self._history_length > 1 or self._history_length <= 0:
             history_slice = slice(None, num)
             if self._history_length > 1:
@@ -323,15 +336,23 @@ class SnapshotRenderer(object):
                 line.set_data(bodies[history_slice, i, 0], bodies[history_slice, i, 1])
                 line.set_3d_properties(bodies[history_slice, i, 2])
                 line.set_alpha(1.0)
+                if self._recoloring_func is not None:
+                    line.set_color(colors[i])
         else:
             if bodies.ndim == 3:
                 self._lines.set_data(bodies[num, :, 0], bodies[num, :, 1])
                 self._lines.set_3d_properties(bodies[num, :, 2])
                 self._lines.set_alpha(1.0)
+                if self._recoloring_func is not None:
+                    for i, line in enumerate(self._lines):
+                        line.set_color(colors[i])
             elif bodies.ndim == 2:
                 self._lines.set_data(bodies[:, 0], bodies[:, 1])
                 self._lines.set_3d_properties(bodies[:, 2])
                 self._lines.set_alpha(1.0)
+                if self._recoloring_func is not None:
+                    for i, line in enumerate(self._lines):
+                        line.set_color(colors[i])
 
     def _update(self, num):
         if self._verbose:

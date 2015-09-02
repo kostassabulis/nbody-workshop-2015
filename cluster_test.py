@@ -3,6 +3,7 @@ from nbody.bodies import Bodies
 from nbody.snapshots.display import SnapshotRenderer
 from nbody.snapshots.storage import SnapshotStorage
 import numpy as np
+import matplotlib.cm as cm
 
 #nb.constants.G, nb.constants.SOLAR_MASS, nb.constants.YR = nb.constants.unitstocode() #conversion to code units [PC], [SOLAR_MASS] and G = 1
 total_time = 1000 * nb.constants.YR
@@ -15,23 +16,18 @@ alpha = 0.0001 #adaptive time step parameter
 N = 500
 
 bodies, distribution = nb.icc.plummer(N, d)
-bodies.time_arr(total_time, dt_output)
-#bodies = nb.icc.super_massive_black_hole(bodies)
-#bodies = nb.icc.test_galaxy(bodies, d=1e16)
 
-# pavyzdys kaip duodame skirtingas spalvas zvaigzdems pagal ju mase
-#bodies.tags = np.zeros_like(bodies.m)
-colors = []
-for i in range(len(bodies.m)):
-    if bodies.m[i] > 1*nb.constants.SOLAR_MASS:
-        colors.append('r')
-    else:
-        colors.append('b')
+def mass_colors(snapshots, time_step):
+    curr_masses = snapshots[time_step, :, 6]
+    norm_mass = (curr_masses - curr_masses.min()) / (curr_masses.max() - curr_masses.min())
+
+    cmap = cm.get_cmap("RdBu")
+    return [cmap(abs(1.0 - norm_mass[i])) for i in range(norm_mass.shape[0])] 
 
 snapshot_storage = SnapshotStorage()
 snapshot_storage.append(bodies)
 
-snapshot_renderer = SnapshotRenderer.for_clusters(snapshot_storage, bounds=[-2e14, 2e14], color=colors, verbose=1, angle=[45, 45])
+snapshot_renderer = SnapshotRenderer.for_clusters(snapshot_storage, recoloring_func=mass_colors, bounds=[-2e14, 2e14], verbose=1, angle=[45, 45])
 #snapshot_renderer.display_step()
 
 for i, current_t in enumerate(nb.leapfrog_adaptive.simulate_step(bodies, G=nb.constants.G, epsilon=epsilon, dt_output=dt_output, alpha=alpha, max_dt_bins=5)):
