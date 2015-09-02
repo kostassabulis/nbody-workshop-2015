@@ -34,14 +34,8 @@ class Bodies(object):
         self.r = np.copy(arr.r)
         self.v = np.copy(arr.v)
         self.m = np.copy(arr.m)
-        self.color = np.copy(arr.color)
+        self.tags = np.copy(arr.tags)
         self.t = np.copy(arr.t)
-
-    def shape(self):
-        return self.r.shape, self.v.shape, self.m.shape, self.t.shape
-
-    def time_arr(self, total, out_step):
-        self.t = np.zeros(int(total/out_step)+1)
 
     def sort_by_radius(self, center=(0, 0, 0)):
         radius = np.sqrt(np.sum((self.r - center)**2, axis=1))
