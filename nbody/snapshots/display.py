@@ -83,6 +83,7 @@ class SnapshotRenderer(object):
         if history_length <= 2 and fade:
             raise ValueError("Can't turn on fading trajectories if history_length is less than 3.")
 
+        self._color = color
         if color is None:
             self._color = lambda x: "b"
         elif color is not None and recoloring_func is not None:
@@ -300,11 +301,12 @@ class SnapshotRenderer(object):
         if bodies.ndim == 3 and num >= bodies.shape[0]:
             raise IndexError("Trying to draw an out of range time step.")
     
-        colors = None
-        if bodies.ndim == 3:
-            colors = self._recoloring_func(bodies, num)
-        elif bodies.ndim == 2:
-            colors = self._recoloring_func(bodies[np.newaxis, :], 0)
+        if self._recoloring_func is not None:
+            colors = None
+            if bodies.ndim == 3:
+                colors = self._recoloring_func(bodies, num)
+            elif bodies.ndim == 2:
+                colors = self._recoloring_func(bodies[np.newaxis, :], 0)
 
         if self._fade:
             if num > 1:

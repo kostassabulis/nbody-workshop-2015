@@ -23,7 +23,7 @@ total_time = 10 * nb.constants.YR
 dt_min = 0.000001 * nb.constants.YR
 epsilon = 0.2
 alpha = 0.001 #adaptive time step parameter
-dt_output = 0.01 * nb.constants.YR
+dt_output = 1.0 * nb.constants.YR
 
 bodies_phys = bodies.clone()
 conversion_params = nb.constants.convert_to_sim_units(bodies)
@@ -35,11 +35,11 @@ snapshot_storage = SnapshotStorage()
 snapshot_storage.append(bodies_phys)
 
 snapshot_renderer = SnapshotRenderer.for_orbits(snapshot_storage, 
-                                                bounds=(-nb.constants.AU / space_coeff, nb.constants.AU / space_coeff))
+                                                bounds=(-nb.constants.AU, nb.constants.AU))
 snapshot_renderer.display_step()
 
-for i, current_t in enumerate(leapfrog_adaptive.simulate_step(bodies, dt_min / space_coeff, 
-        epsilon=epsilon / space_coeff, dt_output=dt_output / space_coeff, alpha=alpha)):
+for i, current_t in enumerate(nb.leapfrog_adaptive.simulate_step(bodies, 
+        epsilon=epsilon / space_coeff, dt_output=dt_output / space_coeff, alpha=alpha, max_dt_bins=5)):
     if current_t >= total_time / time_coeff:
         break
 
