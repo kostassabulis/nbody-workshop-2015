@@ -16,7 +16,7 @@ def calculate_dt(v, delta_v, N_bodies, alpha):
     v_mag = gpu.sqrt(gpu.sum(v[a_max_index,:]**2))
     return alpha*v_mag/a_max
 
-def simulate_step(bodies, dt_min, G, epsilon, dt_output, alpha):
+def simulate_step(bodies, dt_min, epsilon, dt_output, alpha):
     current_t = 0
     current_step = 0
     n_bodies = bodies.r.shape[0]
@@ -24,7 +24,7 @@ def simulate_step(bodies, dt_min, G, epsilon, dt_output, alpha):
     for i in range(n_bodies):
         coord_diff = bodies.r - bodies.r[i, :]
         r_ik3 = (gpu.sum(coord_diff**2, axis=1) + epsilon**2)**1.5 #+ 1e-16
-        delta_v[i,:] = G*gpu.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
+        delta_v[i,:] = gpu.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
         
     dt = max(calculate_dt(bodies.v, delta_v, n_bodies, alpha), dt_min)
     bodies.v += 0.5 * dt * delta_v
@@ -34,7 +34,7 @@ def simulate_step(bodies, dt_min, G, epsilon, dt_output, alpha):
         for i in range(n_bodies):        
             coord_diff = bodies.r - bodies.r[i, :]
             r_ik3 = (gpu.sum(coord_diff**2, axis=1) + epsilon**2)**1.5 #+ 1e-16
-            delta_v[i,:] = G*gpu.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
+            delta_v[i,:] = gpu.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
         
         dt = max(calculate_dt(bodies.v, delta_v, n_bodies, alpha), dt_min)
         bodies.v += dt * delta_v

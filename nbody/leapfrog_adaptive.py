@@ -17,7 +17,7 @@ def calculate_dts(v, delta_v, alpha, dt_output, max_dt_bins, n_bodies):
     return dts_2
 
 
-def simulate_step(bodies, G, epsilon, dt_output, alpha, max_dt_bins):
+def simulate_step(bodies, epsilon, dt_output, alpha, max_dt_bins):
     current_t = 0
     current_step = 0
     n_bodies = bodies.r.shape[0]
@@ -25,7 +25,7 @@ def simulate_step(bodies, G, epsilon, dt_output, alpha, max_dt_bins):
     for i in range(n_bodies):
         coord_diff = bodies.r - bodies.r[i, :]
         r_ik3 = (np.sum(np.power(coord_diff, 2), axis=1) + epsilon ** 2) ** 1.5
-        delta_v[i, :] = G * np.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
+        delta_v[i, :] = np.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
 
     dts = calculate_dts(bodies.v, delta_v, alpha, dt_output, max_dt_bins, n_bodies)
     dt_min = np.min(dts)
@@ -47,6 +47,6 @@ def simulate_step(bodies, G, epsilon, dt_output, alpha, max_dt_bins):
             if times_update[i] <= current_t:
                 coord_diff = bodies.r - bodies.r[i, :]
                 r_ik3 = (np.sum(np.power(coord_diff, 2), axis=1) + epsilon ** 2) ** 1.5
-                delta_v[i, :] = G * np.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
+                delta_v[i, :] = np.sum(bodies.m[:, np.newaxis] * coord_diff / r_ik3[:, np.newaxis], axis=0)
                 bodies.v[i, :] += dts[i] * delta_v[i, :]
                 times_update[i] += dts[i]

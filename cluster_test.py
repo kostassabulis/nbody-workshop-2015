@@ -16,6 +16,8 @@ alpha = 0.0001 #adaptive time step parameter
 N = 500
 
 bodies, distribution = nb.icc.plummer(N, d)
+bodies_phys = bodies.clone()
+conversion_params = nb.constants.convert_to_sim_units(bodies)
 
 def mass_colors(snapshots, time_step):
     curr_masses = snapshots[time_step, :, 6]
@@ -25,22 +27,29 @@ def mass_colors(snapshots, time_step):
     return [cmap(abs(1.0 - norm_mass[i])) for i in range(norm_mass.shape[0])] 
 
 snapshot_storage = SnapshotStorage()
-snapshot_storage.append(bodies)
+snapshot_storage.append(bodies_phys)
 
-snapshot_renderer = SnapshotRenderer.for_clusters(snapshot_storage, recoloring_func=mass_colors, bounds=[-2e14, 2e14], verbose=1, angle=[45, 45])
+space_coeff = nb.constants.space_coeff(*conversion_params)
+snapshot_renderer = SnapshotRenderer.for_clusters(snapshot_storage, 
+        recoloring_func=mass_colors, 
+        bounds=[-2e14, 2e14], 
+        verbose=1, 
+        angle=[45, 45])
 #snapshot_renderer.display_step()
 
-for i, current_t in enumerate(nb.leapfrog_adaptive.simulate_step(bodies, G=nb.constants.G, epsilon=epsilon, dt_output=dt_output, alpha=alpha, max_dt_bins=5)):
-    if current_t >= total_time:
+time_coeff = nb.constants.time_coeff(*conversion_params)
+for i, current_t in enumerate(nb.leapfrog_adaptive.simulate_step(bodies, 
+        epsilon=epsilon / space_coeff, alpha=alpha, dt_output=dt_output / time_coeff, max_dt_bins=5)):
+    if current_t >= total_time / time_coeff:
         break
 
-    print "{}/{}".format(current_t/nb.constants.YR, total_time/nb.constants.YR)
+    print "{}/{}".format(current_t * time_coeff / nb.constants.YR, total_time / nb.constants.YR)
 
-    snapshot_storage.append(bodies)
+    bodies_phys = bodies.clone()
+    nb.constants.convert_from_sim_units(bodies_phys, *conversion_params)
+    snapshot_storage.append(bodies_phys)
     #snapshot_renderer.display_step()
 
-#nb.constants.G, nb.constants.SOLAR_MASS, nb.constants.YR = nb.constants.codetounits() #Back to SI units
-name = "{:s}_N{:d}_T{:d}_E{:.0e}_d{:.0e}_color00".format(distribution, N, int(total_time/nb.constants.YR), epsilon, d)
+name = "{:s}_N{:d}_T{:d}_E{:.0e}_d{:.0e}_color00".format(distribution, N, int(total_time / nb.constants.YR), epsilon, d)
 snapshot_renderer.run(name + ".mp4")
-snapshot_storage.save("nbody/" + name + ".pkl")
-np.save('nbody/{}_time.npy'.format(name), bodies.t)
+snapshot_storage.save(name + ".pkl")

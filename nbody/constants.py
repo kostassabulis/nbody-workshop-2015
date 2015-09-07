@@ -12,14 +12,49 @@ PC = sc.parsec                  #3.086e+16 [m]
 TU = np.sqrt(PC**3/SOLAR_MASS/G) #Time Unit [s]
 TUcoef = YR/TU
 
-def unitstocode():
-    G = 1.
-    YR = TUcoef
-    SOLAR_MASS = 1.
-    return G, SOLAR_MASS, YR
-    
-def codetounits():
-    G = sc.G
-    YR = TUcoef
-    SOLAR_MASS = 1.98e30 
-    return G, SOLAR_MASS, YR
+def get_conversion_params(bodies):
+    # TODO(ZadrraS, Kostas): Replace this with proper potential energy calculation when it's done.
+    potential_energy = 0.0
+    for i in range(bodies.m.shape[0]):
+        for j in range(bodies.m.shape[0]):
+            if i != j:
+                potential_energy += bodies.m[i] * bodies.m[j] / np.sqrt(np.sum((bodies.r[i, :] - bodies.r[j, :])**2))
+
+    potential_energy *= -0.5 * G
+
+    sum_mass = np.sum(bodies.m)
+    virial_radius = -G * sum_mass**2 / (2 * potential_energy)
+
+    return virial_radius, sum_mass
+
+def convert_to_sim_units(bodies):
+    virial_radius, sum_mass = get_conversion_params(bodies)
+
+    bodies.r /= virial_radius
+    bodies.m /= sum_mass
+
+    vel_coef = np.sqrt(G * sum_mass / virial_radius)
+    bodies.v /= vel_coef
+    bodies.t /= virial_radius / vel_coef
+
+    return virial_radius, sum_mass
+
+def convert_from_sim_units(bodies, virial_radius, sum_mass):
+    bodies.r *= virial_radius
+    bodies.m *= sum_mass
+    vel_coef = np.sqrt(G * sum_mass / virial_radius)
+    bodies.v *= vel_coef
+    bodies.t *= virial_radius / vel_coef
+  
+def space_coeff(virial_radius, sum_mass):
+    return virial_radius
+
+def mass_coeff(virial_radius, sum_mass):
+    return sum_mass
+
+def velocity_coeff(virial_radius, sum_mass):
+    return np.sqrt(G * sum_mass / virial_radius)
+
+def time_coeff(virial_radius, sum_mass):
+    return virial_radius / velocity_coeff(virial_radius, sum_mass)
+

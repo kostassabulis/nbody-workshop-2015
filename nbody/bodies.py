@@ -2,6 +2,7 @@
 """
 
 import numpy as np
+import copy
 
 class Bodies(object):
     def __init__(self, r=None, v=None, m=None, t=0, tags=None):
@@ -36,6 +37,9 @@ class Bodies(object):
         self.m = np.copy(arr.m)
         self.tags = np.copy(arr.tags)
         self.t = np.copy(arr.t)
+
+    def clone(self):
+        return copy.deepcopy(self)
 
     def sort_by_radius(self, center=(0, 0, 0)):
         radius = np.sqrt(np.sum((self.r - center)**2, axis=1))
